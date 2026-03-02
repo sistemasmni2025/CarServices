@@ -1,4 +1,4 @@
-import api, { localApi } from './api';
+import api from './api';
 
 // Backend Proxy for Order ID/Creation
 export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
@@ -6,15 +6,15 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
      * Obtiene/Crea el ID de orden desde el Backend (Proxy a /orden/crear).
      */
     try {
-        const params = {
-            sucursal_id: sucursalId ? sucursalId.toString() : "1",
-            usuario_id: usuarioId ? usuarioId.toString() : "1",
-            asesor_id: asesorId ? asesorId.toString() : "1"
+        const payload = {
+            SucursalID: sucursalId ? sucursalId.toString() : "1",
+            UsuarioID: usuarioId ? usuarioId.toString() : "1",
+            AsesorID: asesorId ? asesorId.toString() : "1"
         };
 
-        console.log(`[Frontend] Fetching/Creating Order ID...`, params);
-        // Call our local backend proxy which handles the 119:8000/orden/crear
-        const response = await localApi.get('/orders/next-id', { params });
+        console.log(`[Frontend] Fetching/Creating Order ID directly on .199...`, payload);
+        // Call the remote backend directly
+        const response = await api.post('/orden/crear', payload);
         const data = response.data;
         console.log(`[Frontend] Order ID Response:`, data);
 
@@ -35,26 +35,26 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
 };
 
 export const createOrder = async (orderData) => {
-    // Persist in local DB
-    const response = await localApi.post('/orders/', orderData);
+    // Persist directly on .199
+    const response = await api.post('/orden/crear', orderData);
     return response.data;
 };
 
 export const updateExternalOrder = async (payload) => {
-    console.log(`[Frontend] Updating External Order...`, payload);
-    const response = await localApi.post('/orders/actualizar', payload);
+    console.log(`[Frontend] Updating External Order on .199...`, payload);
+    const response = await api.post('/orden/actualizar', payload);
     console.log(`[Frontend] External Update Response:`, response.data);
     return response.data;
 };
 
 export const getOrderById = async (id) => {
-    const response = await localApi.get(`/orders/${id}`);
+    const response = await api.get(`/orden/consultar/${id}`);
     return response.data;
 };
 
 export const getPendingOrder = async (sucursalId, usuarioId) => {
     try {
-        const response = await localApi.get('/orders/pending', {
+        const response = await api.get('/orden/pendiente', {
             params: {
                 sucursal_id: sucursalId,
                 usuario_id: usuarioId
@@ -71,10 +71,8 @@ export const getPendingOrder = async (sucursalId, usuarioId) => {
 export const getOrdersList = async (ordenId = null) => {
     try {
         const payload = ordenId ? { OrdenID: ordenId } : {};
-        console.log(`[Frontend] Fetching Orders List via proxy... payload:`, payload);
-        // We use POST because the backend proxy is @router.post("/listar")
-        // payload as body
-        const response = await localApi.post('/orders/listar', payload);
+        console.log(`[Frontend] Fetching Orders List directly on .199... payload:`, payload);
+        const response = await api.post('/orden/listar', payload);
         return response.data;
     } catch (error) {
         console.error("Error fetching orders list:", error.message);
@@ -83,8 +81,8 @@ export const getOrdersList = async (ordenId = null) => {
 };
 
 export const cancelOrder = async (orderId) => {
-    console.log(`[Frontend] Cancelling Order ${orderId}...`);
-    const response = await localApi.put(`/orders/${orderId}/cancel`);
+    console.log(`[Frontend] Cancelling Order ${orderId} on .199...`);
+    const response = await api.post('/orden/cancelar', { OrdenID: orderId });
     console.log(`[Frontend] Cancel Response:`, response.data);
     return response.data;
 };
@@ -96,8 +94,8 @@ export const saveOrderTotal = async (payload) => {
      * ahora apunta al nuevo broker en /api/orden/finalizar_proceso
      * que realiza los dos pasos requeridos.
      */
-    console.log(`[Frontend] Saving Consolidated Order via Proxy Dual...`);
-    // Usamos api para llegar al proxy /api/orden/finalizar_proceso en main.py
-    const response = await api.post('/api/orden/finalizar_proceso', payload);
+    console.log(`[Frontend] Saving Consolidated Order directly on .199...`);
+    // Point directly to the native external endpoint
+    const response = await api.post('/orden/guardar_total', payload);
     return response.data;
 };

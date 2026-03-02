@@ -1,28 +1,22 @@
-import api, { localApi } from './api';
+import api from './api';
 
 export const getClients = async () => {
-    // Local DB has the SOAP-synced clients
-    const response = await localApi.get('/clients/');
+    const response = await api.get('/clientes/listar');
     return response.data;
 };
 
 export const createClient = async (clientData) => {
-    // Create in Local (Triggers SOAP + REST Push)
-    const response = await localApi.post('/clients/', clientData);
+    const response = await api.post('/clientes/crear', clientData);
     return response.data;
 };
 
 export const getClientById = async (id) => {
-    const response = await localApi.get(`/clients/${id}`);
+    const response = await api.get(`/clientes/consultar/${id}`);
     return response.data;
 };
 
 export const searchClients = async (query) => {
-    // Search via Local Proxy (SOAP)
-    /**
-     * Busca clientes mediante el Proxy Local (conecta a SOAP).
-     */
-    const response = await localApi.get(`/clients/search`, { params: { q: query } });
+    const response = await api.get(`/clientes/buscar`, { params: { q: query } });
     return response.data;
 };
 

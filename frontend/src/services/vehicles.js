@@ -1,42 +1,35 @@
-import api, { localApi } from './api';
+import api from './api';
 
 export const createVehicle = async (vehicleData) => {
-    // Local DB + Sync
-    const response = await localApi.post('/vehicles/', vehicleData);
+    // Sync directly with .199
+    const response = await api.post('/vehiculos/crear', vehicleData);
     return response.data;
 };
 
 export const getVehiclesByClient = async (clientId) => {
-    // Local DB
-    const response = await localApi.get(`/vehicles/client/${clientId}`);
+    const response = await api.get(`/vehiculos/cliente/${clientId}`);
     return response.data;
 };
 
 export const getUniqueCatalog = async () => {
-    // Local DB
-    const response = await localApi.get('/vehicles/catalog/unique');
+    const response = await api.get('/vehiculos/catalogo/unico');
     return response.data;
 };
 
 export const searchVehiclesSoap = async (clientId) => {
-    // SOAP Proxy via Local Backend
     /**
-     * Busca vehículos en el sistema legacy (SOAP) vía Proxy Local.
+     * Busca vehículos directamente en el backend .199
      */
     try {
-        const response = await localApi.get(`/vehicles/soap/search/${clientId}`);
+        const response = await api.get(`/vehiculos/buscar/${clientId}`);
         return response.data;
     } catch (error) {
-        console.warn("SOAP Search Failed", error);
+        console.warn("Vehicles Search Failed on .199", error);
         return [];
     }
 };
 
 export const registerVehicleSoap = async (vehicleData) => {
-    // SOAP Register via Local Backend
-    /**
-     * Registra un nuevo vehículo en el sistema legacy (SOAP).
-     */
-    const response = await localApi.post('/vehicles/soap/register', vehicleData);
+    const response = await api.post('/vehiculos/registrar', vehicleData);
     return response.data;
 };

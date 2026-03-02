@@ -7,12 +7,12 @@ export const login = async (username, password) => {
      * Envía credenciales al backend y guarda el token recibido.
      */
     const payload = {
-        usuario: username,
-        password: password
+        UsuarioClave: username,
+        UsuarioPassword: password
     };
 
-    // Direct call to remote backend (configured in api.js)
-    const response = await api.post('/api/auth/login', payload);
+    // Direct call to remote backend .199
+    const response = await api.post('/auth/login', payload);
 
     if (response.data.access_token) {
         await AsyncStorage.setItem('user_token', response.data.access_token);

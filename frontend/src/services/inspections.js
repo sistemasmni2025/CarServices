@@ -30,8 +30,8 @@ const MOCK_INSPECTIONS = {
 
 export const getInspectionChecklist = async () => {
     try {
-        // According to user Postman capture, this endpoint requires POST
-        const response = await api.post('/api/inspeccion/valoracion', {});
+        // Pointing directly to native .199 endpoint
+        const response = await api.post('/valoraciones/listar', {});
         return response.data;
     } catch (error) {
         console.error("Error fetching inspection checklist:", error);
@@ -42,8 +42,8 @@ export const getInspectionChecklist = async () => {
 export const saveInspections = async (inspections) => {
     try {
         // inspections: Array of { OrdenID, ValoracionID, InspeccionValor }
-        // Adjust endpoint based on backend implementation
-        const response = await api.post('/api/inspeccion/guardar', inspections);
+        // Pointing directly to port 3000 on .199
+        const response = await api.post('http://172.16.71.199:3000/api/inspeccion/guardar', inspections);
         return response.data;
     } catch (error) {
         console.error("Error saving inspections:", error);

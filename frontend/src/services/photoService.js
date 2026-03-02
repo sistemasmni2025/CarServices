@@ -5,7 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import api from './api';
 
 // Use remote endpoint directly
-const UPLOAD_URL = 'http://172.16.71.199:8000/api/proxy/upload';
+const UPLOAD_URL = 'http://172.16.71.199:8000/evidencias/nueva';
 
 const optimizeImage = async (uri) => {
     /**
@@ -33,83 +33,52 @@ const optimizeImage = async (uri) => {
     }
 };
 
-/**
- * Uploads a single photo to the external service.
- * @param {string} photoUri - The local URI of the photo.
- * @returns {Promise<string>} - The remote URL of the uploaded photo.
- */
-/**
- * Uploads a single photo to the external service.
- * Subida de foto al servidor externo.
- * Maneja FormData compatible con Móvil y Web.
- * @param {string} photoUri - The local URI of the photo.
- * @returns {Promise<string>} - The remote URL of the uploaded photo.
- */
-export const uploadPhoto = async (photoUri, label = "Foto", orderId) => {
+export const uploadPhoto = async (photoUri, token, orderId, type = "1") => {
     if (!photoUri) return null;
 
     try {
         const optimizedUri = await optimizeImage(photoUri);
-
         const formData = new FormData();
         const filename = optimizedUri.split('/').pop();
 
-        // Infer type from extension
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image/jpeg`;
-
         if (Platform.OS === 'web') {
-            // Web: Fetch the URI to get a Blob
             const fetchResponse = await fetch(optimizedUri);
             const blob = await fetchResponse.blob();
-            formData.append('foto', blob, filename);
+            formData.append('file', blob, filename);
         } else {
-            // Native: Use the legacy object format
-            formData.append('foto', {
-                uri: Platform.OS === 'ios' ? photoUri.replace('file://', '') : photoUri,
+            formData.append('file', {
+                uri: Platform.OS === 'ios' ? optimizedUri.replace('file://', '') : optimizedUri,
                 name: filename,
-                type: type,
+                type: 'image/jpeg',
             });
         }
 
-        // Add label as 'tipo' for backend identification
-        formData.append('tipo', label);
-
-        // Add Order ID if present
-        if (orderId) {
-            formData.append('ordenid', orderId);
-        }
+        formData.append('orden_id', orderId);
+        formData.append('tipoevidenciaclave', type);
 
         console.log(`[PhotoService] Uploading ${filename} to ${UPLOAD_URL}...`);
-
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 90000); // Pa que aumentes el tiempo si tarda mucho mi estimado
 
         const response = await fetch(UPLOAD_URL, {
             method: 'POST',
             body: formData,
-            signal: controller.signal,
             headers: {
                 'Accept': 'application/json',
-                // Content-Type removed to allow boundary generation
+                'Authorization': `Bearer ${token}`
             }
         });
-        clearTimeout(timeout);
-
 
         const result = await response.json();
         console.log('[PhotoService] Upload Result:', result);
 
-        if (response.ok && result.ok && result.url) {
-            const serviceHost = 'http://172.16.71.199:8000';
-            return result.url.startsWith('http') ? result.url : `${serviceHost}${result.url}`;
+        if (response.ok) {
+            return result.url || result.path || true;
         } else {
             console.error('[PhotoService] Upload failed:', result);
-            return null; // Or throw error?
+            return null;
         }
     } catch (error) {
         console.error('[PhotoService] Network Error:', error);
-        return null; // Fail gracefully for now, maybe allow retry?
+        return null;
     }
 };
 
