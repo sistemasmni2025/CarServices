@@ -1,0 +1,16 @@
+﻿
+Protocolo tcp Intervalos de exclusi├│n de puertos
+
+Puerto de inicio    Puerto final      
+----------          --------      
+      5357        5357      
+      7990        8089      
+      9244        9244      
+     34804       34903      
+     49704       49803      
+     49804       49903      
+     50000       50059     *
+     56533       56632      
+
+* - Exclusiones de puertos administrados.
+

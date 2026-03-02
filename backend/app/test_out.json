@@ -1,0 +1,5 @@
+{
+  "OrdenID": null,
+  "success": false,
+  "message": "Error de integridad al crear el ingreso: 1062 (23000): Duplicate entry '29801' for key 'cliente.uq_cliente_clienteclave'"
+}

@@ -53,11 +53,31 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
      * 3. Checklist de inspección vehicular dinámico.
      */
     const [isColorModalVisible, setIsColorModalVisible] = useState(false);
-    const [formData, setFormData] = useState(data);
+    const [formData, setFormData] = useState(data || {
+        tag: '',
+        brand: '',
+        model: '',
+        year: '',
+        color: '',
+        chassis: '',
+        transmission: 'Automática',
+        fuelType: 'Gasolina',
+        mileage: '',
+        fuelLevel: 50,
+        colorHex: '#FFFFFF',
+        observaciones: ''
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const [inspectionData, setInspectionData] = useState([]);
     const [loadingInspection, setLoadingInspection] = useState(true);
+
+    // Sync formData with new props defensively
+    useEffect(() => {
+        if (data) {
+            setFormData(data);
+        }
+    }, [data]);
 
     // Initialize inventory if not present
     useEffect(() => {
@@ -150,7 +170,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <TextInput
                             style={styles.input}
                             placeholder="Placas *"
-                            value={formData.tag}
+                            value={formData?.tag || ''}
                             onChangeText={(t) => handleChange('tag', t)}
                             autoCapitalize="characters"
                         />
@@ -160,7 +180,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <TextInput
                             style={styles.input}
                             placeholder="Marca *"
-                            value={formData.brand}
+                            value={formData?.brand || ''}
                             onChangeText={(t) => handleChange('brand', t)}
                             autoCapitalize="characters"
                         />
@@ -174,7 +194,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <TextInput
                             style={styles.input}
                             placeholder="Modelo *"
-                            value={formData.model}
+                            value={formData?.model || ''}
                             onChangeText={(t) => handleChange('model', t)}
                             autoCapitalize="characters"
                         />
@@ -182,13 +202,13 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                     <View style={[styles.inputGroup, { flex: 0.8 }]}>
                         <MaterialCommunityIcons name="calendar" size={20} color="#666" style={styles.inputIcon} />
                         <TextInput
-                            style={[styles.input, formData.isSoap && { backgroundColor: '#f0f0f0', color: '#666' }]}
+                            style={[styles.input, formData?.isSoap && { backgroundColor: '#f0f0f0', color: '#666' }]}
                             placeholder="Año *"
-                            value={formData.year ? String(formData.year) : ''}
+                            value={formData?.year ? String(formData.year) : ''}
                             onChangeText={(t) => handleChange('year', t)}
                             keyboardType="numeric"
                             maxLength={4}
-                            editable={!formData.isSoap}
+                            editable={!formData?.isSoap}
                         />
                     </View>
                 </View>
@@ -204,7 +224,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                             style={[styles.input, { textAlignVertical: 'center', lineHeight: Platform.OS === 'web' ? 42 : undefined }]}
                             numberOfLines={1}
                         >
-                            {formData.color || "Color *"}
+                            {formData?.color || "Color *"}
                         </Text>
                         <MaterialCommunityIcons name="chevron-down" size={20} color="#ccc" />
                     </TouchableOpacity>
@@ -214,7 +234,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <TextInput
                             style={styles.input}
                             placeholder="Serie / VIN"
-                            value={formData.chassis}
+                            value={formData?.chassis || ''}
                             onChangeText={(t) => handleChange('chassis', t)}
                             autoCapitalize="characters"
                         />
@@ -225,7 +245,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <TextInput
                             style={styles.input}
                             placeholder="Motor"
-                            value={formData.motor}
+                            value={formData?.motor || ''}
                             onChangeText={(t) => handleChange('motor', t)}
                             autoCapitalize="characters"
                         />
@@ -242,7 +262,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                     <TextInput
                         style={styles.input}
                         placeholder="Kilometraje (K.M.)"
-                        value={formData.mileage}
+                        value={formData?.mileage || ''}
                         onChangeText={(t) => handleChange('mileage', t)}
                         keyboardType="numeric"
                     />
@@ -255,7 +275,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                     <TextInput
                         style={[styles.input, { textAlignVertical: 'top', height: '100%' }]}
                         placeholder="Observaciones"
-                        value={formData.observaciones}
+                        value={formData?.observaciones || ''}
                         onChangeText={(t) => handleChange('observaciones', t)}
                         multiline={true}
                         numberOfLines={4}
@@ -263,10 +283,9 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                 </View>
             </View>
 
-
             {/* Fuel Gauge - Enhanced Visual */}
             <View style={styles.visualSection}>
-                <FuelGauge value={formData.fuelLevel} onChange={(v) => handleChange('fuelLevel', v)} />
+                <FuelGauge value={formData?.fuelLevel || 50} onChange={(v) => handleChange('fuelLevel', v)} />
             </View>
 
             {/* Inventory Checklist */}

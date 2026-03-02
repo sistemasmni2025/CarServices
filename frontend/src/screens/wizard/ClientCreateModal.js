@@ -160,6 +160,7 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
                                 autoCapitalize="characters"
                                 autoCorrect={false}
                                 returnKeyType="next"
+                                maxLength={13}
                             />
                         </View>
 

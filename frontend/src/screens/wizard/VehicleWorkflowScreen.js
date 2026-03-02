@@ -100,10 +100,23 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
     };
 
     const handleBrandSelect = (brandName) => {
-        // Pre-fill brand in details
+        // Pre-fill brand in details, initialize the rest
         onUpdate({
             ...data,
-            details: { ...data.details, brand: brandName }
+            details: {
+                tag: '',
+                brand: brandName,
+                model: '',
+                year: '',
+                color: '',
+                chassis: '',
+                transmission: 'Automática',
+                fuelType: 'Gasolina',
+                mileage: '',
+                fuelLevel: 50,
+                colorHex: '#FFFFFF',
+                observaciones: ''
+            }
         });
         setStep(2);
     };
