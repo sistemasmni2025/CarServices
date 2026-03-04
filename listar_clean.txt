@@ -1,0 +1,27 @@
+
+--- Testing http://172.16.71.199:8000/orden/listar ---
+Status: 200
+Type: <class 'dict'>
+It's a dict: {
+  "Orden": {
+    "OrdenID": 274,
+    "SucursalID": 1,
+    "UsuarioID": 1,
+    "ClienteID": 178,
+    "VehiculoID": 24,
+    "AsesorID": 1,
+    "OrdenIDGen": null,
+    "OrdenTipo": "1",
+    "OrdenFecha": "2026-02-26T00:00:00",
+    "OrdenFechaIngreso": "2026-02-26T00:04:37",
+    "OrdenFechaEntrega": null,
+    "OrdenObservaciones": "Hhg r ds",
+    "OrdenEstatus": "T"
+  },
+  "Cliente": {
+    "ClienteClave": "19773",
+    "ClienteNombre": "OSCAR ALBERTO FLORES CASTRO",
+    "ClienteRazon": "OSCAR ALBER
+--- Testing http://172.16.71.199:8000/ingresos/listar ---
+Status: 404
+Response: {"detail":"Not Found"}

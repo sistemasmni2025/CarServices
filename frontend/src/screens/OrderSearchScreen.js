@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, Platform, FlatList, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AgendaBoard from '../components/AgendaBoard';
 import { getOrdersList } from '../services/orders';
+import { AuthContext } from '../context/AuthContext';
 
 const OrderSearchScreen = ({ navigation }) => {
     /**
@@ -12,37 +13,104 @@ const OrderSearchScreen = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState('Lista');
     const [ordersList, setOrdersList] = useState([]);
     const [isLoadingList, setIsLoadingList] = useState(false);
+    const [selectedStatus, setSelectedStatus] = useState('A'); // A: Abierta, T: Terminada, C: Cancelada
+    const { selectedBranch } = useContext(AuthContext);
 
     useEffect(() => {
         if (activeTab === 'Lista') {
             fetchOrders();
         }
-    }, [activeTab]);
+    }, [activeTab, selectedBranch?.id, selectedStatus]);
 
     const fetchOrders = async () => {
         setIsLoadingList(true);
+        const branchId = selectedBranch?.id || selectedBranch?.SucursalID;
+        console.log(`[OrderSearchScreen] Fetching filtered orders from backend. Status: ${selectedStatus}, Branch: ${branchId}`);
+
         try {
-            const data = await getOrdersList();
-            setOrdersList(data || []);
+            // El backend ahora soporta y requiere SucursalID y OrdenEstatus nativamente.
+            const data = await getOrdersList(null, branchId, selectedStatus);
+
+            let normalizedData = [];
+
+            if (Array.isArray(data)) {
+                normalizedData = data;
+            } else if (data && typeof data === 'object') {
+                if (data.Orden) {
+                    normalizedData = [{
+                        ...data.Orden,
+                        ClienteNombre: data.Cliente?.ClienteNombre || data.Orden.ClienteNombre || 'Sin Cliente',
+                        VehiculoPlacas: data.Vehiculo?.VehiculoPlacas || data.Orden.VehiculoPlacas || 'Sin Placas',
+                        SucursalNombre: data.Orden.SucursalNombre || selectedBranch?.nombre || 'N/A'
+                    }];
+                } else if (Object.keys(data).length > 0 && !data.detail) {
+                    normalizedData = [data];
+                }
+            }
+
+            console.log(`[OrderSearchScreen] Orders returned from backend: ${normalizedData.length}`);
+
+            // Fix field mapping based on backend short model
+            const properlyMapped = normalizedData.map(item => ({
+                ...item,
+                OrdenEstatus: item.OrdenEstatus || selectedStatus,
+                ClienteNombre: item.ClienteNombre || 'Sin Cliente Asignado',
+                VehiculoPlacas: item.VehiculoPlacas || 'Sin Placas',
+                SucursalNombre: item.SucursalNombre || selectedBranch?.nombre || 'N/A'
+            }));
+
+            // Invert array to show newest first if typical order IDs ascend
+            setOrdersList(properlyMapped.reverse());
+
         } catch (error) {
             console.error("Error cargando lista de órdenes:", error);
-            alert("No se pudo cargar la lista de órdenes.");
+            setOrdersList([]);
         } finally {
             setIsLoadingList(false);
         }
     };
 
     const handleOrderPress = (ordenId) => {
-        // Navegamos a la nueva pantalla mandando el ID
         navigation.navigate('OrderDetail', { ordenId });
     };
+
+    const StatusFilter = () => (
+        <View style={styles.statusFilterContainer}>
+            <TouchableOpacity
+                style={[styles.statusOption, selectedStatus === 'A' && styles.activeStatusOption]}
+                onPress={() => setSelectedStatus('A')}
+            >
+                <Text style={[styles.statusOptionText, selectedStatus === 'A' && styles.activeStatusOptionText]}>Abiertas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.statusOption, selectedStatus === 'T' && styles.activeStatusOption]}
+                onPress={() => setSelectedStatus('T')}
+            >
+                <Text style={[styles.statusOptionText, selectedStatus === 'T' && styles.activeStatusOptionText]}>Terminadas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.statusOption, selectedStatus === 'C' && styles.activeStatusOption]}
+                onPress={() => setSelectedStatus('C')}
+            >
+                <Text style={[styles.statusOptionText, selectedStatus === 'C' && styles.activeStatusOptionText]}>Canceladas</Text>
+            </TouchableOpacity>
+        </View>
+    );
 
     const renderOrderItem = ({ item }) => (
         <TouchableOpacity style={styles.orderCard} onPress={() => handleOrderPress(item.OrdenID)}>
             <View style={styles.cardHeader}>
                 <Text style={styles.cardOrderId}>{item.OrdenIDGen || `ID: ${item.OrdenID}`}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: item.OrdenTipo === '1' ? '#E8F4FD' : '#E8F4FD' }]}>
-                    <Text style={styles.statusText}>Tipo {item.OrdenTipo}</Text>
+                <View style={[
+                    styles.statusBadge,
+                    { backgroundColor: item.OrdenEstatus === 'T' ? '#E8F5E9' : item.OrdenEstatus === 'C' ? '#FFEBEE' : '#E8F4FD' }
+                ]}>
+                    <Text style={[
+                        styles.statusText,
+                        { color: item.OrdenEstatus === 'T' ? '#2E7D32' : item.OrdenEstatus === 'C' ? '#C62828' : '#0056b3' }
+                    ]}>
+                        {item.OrdenEstatus === 'T' ? 'Terminada' : item.OrdenEstatus === 'C' ? 'Cancelada' : 'Abierta'}
+                    </Text>
                 </View>
             </View>
             <View style={styles.cardBody}>
@@ -56,7 +124,7 @@ const OrderSearchScreen = ({ navigation }) => {
                 </View>
                 <View style={styles.cardRow}>
                     <MaterialCommunityIcons name="store" size={16} color="#666" />
-                    <Text style={styles.cardText}>{item.SucursalNombre} - Asesor: {item.AsesorNombre}</Text>
+                    <Text style={styles.cardText}>{item.SucursalNombre} - Asesor: {item.AsesorNombre || item.AsesorID || 'N/A'}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -66,7 +134,6 @@ const OrderSearchScreen = ({ navigation }) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
 
-            {/* Header Section (Consistente con Dashboard) */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -81,12 +148,9 @@ const OrderSearchScreen = ({ navigation }) => {
                 <View style={styles.headerCenter}>
                     <Text style={styles.screenTitle}>Consultar Órdenes</Text>
                 </View>
-                <View style={styles.headerRight}>
-                    {/* Botón de filtro removido por petición del usuario */}
-                </View>
+                <View style={styles.headerRight} />
             </View>
 
-            {/* Custom Tabs */}
             <View style={styles.tabsContainer}>
                 <TouchableOpacity
                     style={[styles.tabButton, activeTab === 'Lista' && styles.activeTabButton]}
@@ -105,14 +169,12 @@ const OrderSearchScreen = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
-            {/* Contenido Principal */}
             <View style={styles.content}>
                 {activeTab === 'Agenda' ? (
-                    // Componente Agenda Visual (Estructura Gantt / Calendario)
                     <AgendaBoard />
                 ) : (
-                    // Vista Listado Interactivo
                     <View style={styles.listContainer}>
+                        <StatusFilter />
                         {isLoadingList ? (
                             <View style={styles.centerContainer}>
                                 <ActivityIndicator size="large" color="#007BFF" />
@@ -121,9 +183,9 @@ const OrderSearchScreen = ({ navigation }) => {
                         ) : ordersList.length === 0 ? (
                             <View style={styles.centerContainer}>
                                 <MaterialCommunityIcons name="format-list-checks" size={60} color="#CCC" />
-                                <Text style={styles.placeholderText}>No se encontraron órdenes disponibles en el sistema.</Text>
+                                <Text style={styles.placeholderText}>No se encontraron órdenes {selectedStatus === 'A' ? 'abiertas' : selectedStatus === 'T' ? 'terminadas' : 'canceladas'} en esta sucursal.</Text>
                                 <TouchableOpacity style={styles.retryButton} onPress={fetchOrders}>
-                                    <Text style={styles.retryButtonText}>Reintentar Consulta</Text>
+                                    <Text style={styles.retryButtonText}>Actualizar</Text>
                                 </TouchableOpacity>
                             </View>
                         ) : (
@@ -222,6 +284,32 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         padding: 10,
+    },
+    statusFilterContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#FFF',
+        borderRadius: 8,
+        padding: 4,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    statusOption: {
+        flex: 1,
+        paddingVertical: 8,
+        alignItems: 'center',
+        borderRadius: 6,
+    },
+    activeStatusOption: {
+        backgroundColor: '#007BFF',
+    },
+    statusOptionText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#666',
+    },
+    activeStatusOptionText: {
+        color: '#FFF',
     },
     listContainer: {
         flex: 1,

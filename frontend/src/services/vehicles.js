@@ -21,8 +21,14 @@ export const searchVehiclesSoap = async (clientId) => {
      * Busca vehículos directamente en el backend .199
      */
     try {
-        const response = await api.get(`/vehiculos/buscar/${clientId}`);
-        return response.data;
+        const response = await api.get(`/vehiculos/soap/${clientId}`);
+        // Handle wrapper if present
+        if (response.data && response.data.success && Array.isArray(response.data.data)) {
+            return response.data.data;
+        } else if (Array.isArray(response.data)) {
+            return response.data;
+        }
+        return [];
     } catch (error) {
         console.warn("Vehicles Search Failed on .199", error);
         return [];

@@ -1,0 +1,13 @@
+Status: 200
+Type: <class 'list'>
+Length: 33
+{
+  "OrdenID": 346,
+  "OrdenIDGen": "BB-000346",
+  "SucursalNombre": "CELAYA",
+  "UsuarioNombre": null,
+  "ClienteNombre": "Juan Perez",
+  "VehiculoPlacas": "GSB4445",
+  "AsesorNombre": "Patio Local Celaya",
+  "OrdenTipo": "1"
+}

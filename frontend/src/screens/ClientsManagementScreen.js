@@ -1,40 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { getClients } from '../services/clients';
+import { getClients, searchClients } from '../services/clients';
 
 const ClientsManagementScreen = ({ navigation }) => {
     const [search, setSearch] = useState('');
-    const [clients, setClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
 
-    useEffect(() => {
-        fetchClients();
-    }, []);
+    // Eliminamos la carga inicial de todos los clientes porque
+    // el nuevo endpoint SOAP requiere una búsqueda obligatoria.
 
-    const fetchClients = async () => {
+    const handleSearch = async (text) => {
+        setSearch(text);
+
+        if (!text || text.trim() === '') {
+            setFilteredClients([]);
+            setIsSearching(false);
+            return;
+        }
+
+        // Búsqueda dinámica con el nuevo endpoint
+        setIsSearching(true);
+        setLoading(true);
         try {
-            const data = await getClients();
-            setClients(data);
-            setFilteredClients(data);
+            console.log(`[ClientsManagement] Searching for: ${text}`);
+            const data = await searchClients(text);
+            console.log(`[ClientsManagement] Search returned ${data ? data.length : 0} items`);
+
+            // Verificamos si la respuesta es un arreglo (formato esperado)
+            if (Array.isArray(data)) {
+                setFilteredClients(data);
+            } else if (data && typeof data === 'object') {
+                // Manejo de fallback si el backend envuelve la respuesta
+                setFilteredClients([data]);
+            } else {
+                setFilteredClients([]);
+            }
         } catch (error) {
-            console.error(error);
+            console.error("Error buscando clientes:", error);
+            setFilteredClients([]);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleSearch = (text) => {
-        setSearch(text);
-        if (text) {
-            const newData = clients.filter(item => {
-                const itemData = item.nombre ? item.nombre.toUpperCase() : ''.toUpperCase();
-                const textData = text.toUpperCase();
-                return itemData.indexOf(textData) > -1 || (item.codigo && item.codigo.includes(text));
-            });
-            setFilteredClients(newData);
-        } else {
-            setFilteredClients(clients);
         }
     };
 
@@ -68,10 +75,16 @@ const ClientsManagementScreen = ({ navigation }) => {
             ) : (
                 <FlatList
                     data={filteredClients}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item) => (item.id ? item.id.toString() : item.codigo ? item.codigo.toString() : Math.random().toString())}
                     renderItem={renderItem}
                     contentContainerStyle={styles.list}
-                    ListEmptyComponent={<Text style={styles.emptyText}>No se encontraron clientes.</Text>}
+                    ListEmptyComponent={
+                        <Text style={styles.emptyText}>
+                            {!isSearching
+                                ? "Escriba un nombre o código para buscar clientes."
+                                : "No se encontraron clientes con esa búsqueda."}
+                        </Text>
+                    }
                 />
             )}
 

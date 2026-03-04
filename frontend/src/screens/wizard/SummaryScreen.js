@@ -137,7 +137,6 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
             <View style={styles.header}>
                 <View>
                     <Text style={styles.title}>Resumen de la Orden</Text>
-                    <Text style={styles.orderId}>{orderData.id}</Text>
                 </View>
                 <View style={styles.statusBadge}>
                     <Text style={styles.statusText}>PENDIENTE</Text>
@@ -146,7 +145,7 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
 
             <SummarySection title="Sesión y Configuración" icon="clock-outline">
                 <InfoRow label="Unidad Negocio" value={wizardData?.ingreso?.unidadNegocio || "---"} />
-                <InfoRow label="Asesor" value={wizardData?.ingreso?.asesor || "---"} />
+                <InfoRow label="Asesor" value={wizardData?.ingreso?.asesorId ? `${wizardData.ingreso.asesor} (${wizardData.ingreso.asesorId})` : (wizardData?.ingreso?.asesor || "---")} />
                 <InfoRow label="Sucursal" value={wizardData?.session?.sucursalNombre || '---'} />
                 <InfoRow label="Fecha Registro" value={wizardData?.ingreso?.fecha || "---"} />
             </SummarySection>

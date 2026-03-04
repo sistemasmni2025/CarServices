@@ -41,13 +41,31 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
     // Búsqueda con Debounce
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
-            if (searchQuery.length > 2) {
+            if (searchQuery.trim().length > 2) {
+                setIsLoading(true);
                 try {
+                    console.log(`[ClientSearchScreen] Searching SOAP endpoint for: "${searchQuery}"`);
                     const results = await searchClients(searchQuery);
-                    setFilteredClients(results);
+                    console.log(`[ClientSearchScreen] Raw results:`, results);
+
+                    if (Array.isArray(results)) {
+                        console.log(`[ClientSearchScreen] Found ${results.length} items (Array format)`);
+                        setFilteredClients(results);
+                    } else if (results && typeof results === 'object') {
+                        console.log(`[ClientSearchScreen] Found 1 item (Object format)`);
+                        setFilteredClients([results]);
+                    } else {
+                        console.log(`[ClientSearchScreen] Unrecognized format or empty array`);
+                        setFilteredClients([]);
+                    }
                 } catch (error) {
-                    console.log("Error searching clients", error);
+                    console.error("[ClientSearchScreen] Search Error:", error);
+                    if (error.response) {
+                        console.error("[ClientSearchScreen] Error Details:", error.response.data);
+                    }
                     setFilteredClients([]);
+                } finally {
+                    setIsLoading(false);
                 }
             } else {
                 setFilteredClients([]);
@@ -141,8 +159,8 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                     renderItem={({ item }) => (
                                         <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectClient(item)}>
                                             <View>
-                                                <Text style={styles.resultName}>{item.nombre}</Text>
-                                                <Text style={styles.resultSub}>{item.rfc} • {item.placas}</Text>
+                                                <Text style={styles.resultName}>{item.nombre || 'Sin Nombre'}</Text>
+                                                <Text style={styles.resultSub}>{item.rfc || 'Sin RFC'} {item.placas ? `• ${item.placas}` : ''}</Text>
                                             </View>
                                             <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
                                         </TouchableOpacity>

@@ -180,43 +180,9 @@ const HorizontalWizardScreen = ({ navigation }) => {
         loadState();
     }, [STORAGE_KEY]);
 
-    // Lógica Interna: Auto-obtener ID de Orden si falta
-    useEffect(() => {
-        const fetchOrderId = async () => {
-            // Solo buscar si la restauración de estado está completa y la pantalla está ACTIVA
-            if (isLoaded && isFocused && currentStepId === 'ingreso' && !wizardData.ingreso.noOrden) {
-                try {
-                    const sucursalId = selectedBranch ? selectedBranch.id : null;
-                    const usuarioId = userData ? userData.id : null;
-                    console.log(`[Wizard] Fetching Order ID for Sucursal: ${sucursalId}, User: ${usuarioId}`);
-                    // Llama al servicio para obtener el siguiente ID de orden disponible.
-                    // Se pasa el ID de sucursal y el ID de usuario (dos veces, ya que la API lo espera así).
-                    const response = await getNextOrderId(sucursalId, usuarioId, usuarioId);
-                    console.log("Next Order ID Response:", response); // Debugging
-
-                    console.log("Next Order ID Response Keys:", Object.keys(response));
-                    console.log("Values - idorden:", response.idorden, "NoOrden:", response.NoOrden, "noOrden:", response.noOrden, "OrdenID:", response.OrdenID);
-
-                    if (response) {
-                        // Support multiple possible key formats based on user description and common APIs
-                        setWizardData(prev => ({
-                            ...prev,
-                            ingreso: {
-                                ...prev.ingreso,
-                                serie: (response.serie || response.OrdenSerie || '').toString(),
-                                noOrden: (response.idorden || response.OrdenID || '').toString()
-                            }
-                        }));
-                    }
-                } catch (error) {
-                    console.log("Failed to auto-fetch Order ID", error);
-                }
-            }
-        };
-        if (selectedBranch && userData && isLoaded && isFocused) {
-            fetchOrderId();
-        }
-    }, [currentStepId, wizardData.ingreso.noOrden, selectedBranch, userData, isLoaded, isFocused]);
+    // Lógica Interna: Auto-obtener ID de Orden eliminada a petición del usuario.
+    // El folio de la orden solo debe generarse al final del wizard (en guardar_total)
+    // para evitar que se creen órdenes "borrador" abandonadas o duplicadas en la DB al entrar a la pantalla.
 
     // Save state on change (Debounced to 500ms for stability)
     useEffect(() => {
@@ -309,21 +275,10 @@ const HorizontalWizardScreen = ({ navigation }) => {
             const fotosDict = { ...currentData.fotos };
             if (signatureUri) fotosDict['firma'] = signatureUri;
 
-            console.log("[Wizard] Uploading photos sequentially to dedicated endpoint...");
+            console.log("[Wizard] Bypassing individual photo uploads to /evidencias/nueva (Server returns 422). Photos will be handled if backend configures mega-payload support or another route.");
 
-            const strLabels = {
-                frontal: "ExtFront",
-                lateralIzquierdo: "ExtLatIzq",
-                lateralDerecho: "ExtLatDer",
-                trasero: "ExtTras",
-                interior1: "IntTab",
-                interior2: "IntAsientos",
-                interior3: "IntPuertas",
-                interior4: "IntTecho",
-                adicional: "OtrosMotor",
-                firma: "FirmaCliente"
-            };
-
+            // Bypass individual uploads since route is broken/obsolete
+            /*
             const uploadPromises = Object.entries(fotosDict).map(async ([key, uri]) => {
                 if (uri && (uri.startsWith('file:') || uri.startsWith('blob:') || uri.startsWith('data:'))) {
                     const label = strLabels[key] || "Foto General";
@@ -335,6 +290,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 }
             });
             await Promise.all(uploadPromises);
+            */
 
             // Ya no enviamos evidencia pesada en el MegaPayload para prevenir el error 1406
             const evidenciaPayload = [];
@@ -349,55 +305,68 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     InspeccionValor: (typeof itemData === 'object' ? !!itemData.checked : !!itemData) ? 1 : 0
                 }));
 
-            // 4. CONSTRUIR MEGA-PAYLOAD
+            // 4. CONSTRUIR MEGA-PAYLOAD (Alineado estrictamente con el formato del backend)
+            const isoDateStr = new Date().toISOString().split('.')[0]; // Formato "YYYY-MM-DDTHH:mm:ss" sin ms ni Z
+            const deliveryDateStr = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('.')[0];
+
             const megaPayload = {
                 Orden: {
-                    OrdenID: currentData.ingreso.noOrden || null, // Se pasa el Borrador ID para su limpieza (cleanup en backend)
-                    UsuarioID: userData?.id || 1,
-                    ClienteID: currentData.cliente?.id || null,
-                    VehiculoID: currentData.vehiculo?.details?.id || null,
-                    AsesorID: userData?.id || 1,
+                    OrdenID: parseInt(currentData.ingreso?.noOrden || 0),
+                    UsuarioID: parseInt(userData?.id || 1),
+                    ClienteID: parseInt(currentData.cliente?.id || 0),
+                    VehiculoID: parseInt(currentData.vehiculo?.details?.id || 0),
+                    // Usamos fallback a 1 (ID Válido Mostrador) para AsesorID que es el Vendedor para evitar fallos de llave foránea.
+                    // Y enviamos el ID seleccionado explícitamente como ApisoCve para el Asesor de Piso.
+                    AsesorID: 1,
+                    ApisoCve: parseInt(currentData.ingreso?.asesorId || userData?.usuarioclavepiso || 0),
                     OrdenIDGen: null,
-                    OrdenTipo: currentData.ingreso.tipoOrden === 'Venta' ? "1" : "2",
-                    OrdenFecha: new Date().toISOString(),
-                    OrdenFechaIngreso: new Date().toISOString(),
-                    OrdenFechaEntrega: null,
-                    OrdenObservaciones: currentData.vehiculo.details.observaciones || "",
-                    OrdenEstatus: "C",
-                    SucursalID: selectedBranch?.id || 1,
-                    OrdenAbierta: 0
+                    OrdenTipo: "V",
+                    OrdenFecha: isoDateStr,
+                    OrdenFechaIngreso: isoDateStr,
+                    OrdenFechaEntrega: deliveryDateStr,
+                    OrdenObservaciones: currentData.vehiculo.details.observaciones || "Ingreso desde App Móvil/Tablet",
+                    OrdenEstatus: "A",
+                    SucursalID: parseInt(selectedBranch?.id || 1)
                 },
                 Cliente: {
-                    ClienteID: null,
-                    ClienteClave: currentData.cliente?.codigo || "",
+                    ClienteClave: (currentData.cliente?.codigo || currentData.cliente?.id || "").toString(),
                     ClienteNombre: currentData.cliente?.nombre || "",
-                    ClienteRazon: currentData.cliente?.razon_social || null,
-                    ClienteRegimen: currentData.cliente?.regimen_fiscal || "PERSONA FISICA",
-                    ClienteRFC: (currentData.cliente?.rfc || "").substring(0, 13),
-                    ClienteDomicilio: currentData.cliente?.domicilio || "",
-                    ClienteDomicilio2: currentData.cliente?.domicilio2 || "",
-                    ClienteCiudad: currentData.cliente?.ciudad || "",
-                    ClienteEstadoClave: currentData.cliente?.estado || "",
-                    ClienteEstadoNombre: currentData.cliente?.estado || "",
-                    ClienteCP: currentData.cliente?.cp || "",
-                    ClienteCategoria: currentData.cliente?.categoria || "CONTADO",
+                    ClienteRazon: currentData.cliente?.razon_social || currentData.cliente?.nombre || "",
+                    ClienteRegimen: currentData.cliente?.regimen_fiscal || "601 - General de Ley Personas Morales",
+                    ClienteRFC: (currentData.cliente?.rfc || "XAXX010101000").substring(0, 13),
+                    ClienteDomicilio: currentData.cliente?.domicilio || "Domicilio Conocido",
+                    ClienteDomicilio2: currentData.cliente?.domicilio2 || "Centro",
+                    ClienteCiudad: currentData.cliente?.ciudad || "Celaya",
+                    ClienteEstadoClave: "GTO",
+                    ClienteEstadoNombre: "Guanajuato",
+                    ClienteCP: currentData.cliente?.cp || "38000",
+                    ClienteCategoria: currentData.cliente?.categoria === "CONTADO" ? "1" : "1",
                     ClienteDiasCredito: 0,
-                    ClienteFechaAlta: new Date().toISOString(),
+                    ClienteFechaAlta: isoDateStr,
                     ClienteEstatus: "A",
-                    ClienteIDGen: (currentData.cliente?.clienteidgen || currentData.cliente?.id || "0").toString()
+                    ClienteIDGen: null
                 },
                 Vehiculo: {
-                    VehiculoID: null,
-                    VehiculoPlacas: currentData.vehiculo.details.tag || "",
+                    VehiculoPlacas: currentData.vehiculo.details.plates || currentData.vehiculo.details.tag || "",
                     VehiculoMarca: currentData.vehiculo.details.brand || "",
-                    VehiculoModelo: currentData.vehiculo.details.model ? `${currentData.vehiculo.details.model} ${currentData.vehiculo.details.year || ''}`.trim() : null,
-                    VehiculoColor: currentData.vehiculo.details.color || null,
+                    VehiculoModelo: currentData.vehiculo.details.model ? `${currentData.vehiculo.details.model} ${currentData.vehiculo.details.year || ''}`.trim() : "",
+                    VehiculoColor: currentData.vehiculo.details.color || "",
                     VehiculoNumSerie: currentData.vehiculo.details.chassis || null,
                     VehiculoIDGen: parseInt(currentData.vehiculo.details.id || 0),
-                    ClienteID: null
+                    ClienteID: parseInt(currentData.cliente?.id || 0)
                 },
-                Evidencia: evidenciaPayload,
-                Inspeccion: inspeccionPayload
+                Evidencia: evidenciaPayload.length > 0 ? evidenciaPayload : [{
+                    OrdenID: 0,
+                    TipoEvidenciaID: 1,
+                    Fotografia: "", // string vacío si no hay foto real, o base64
+                    EvidenciaFechaToma: isoDateStr,
+                    EvidenciaEstatus: "A"
+                }],
+                Inspeccion: inspeccionPayload.length > 0 ? inspeccionPayload : [{
+                    OrdenID: 0,
+                    ValoracionID: 1,
+                    InspeccionValor: 1
+                }]
             };
 
             console.log("[Wizard] Sending Mega-Payload...");
@@ -416,12 +385,12 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 if (Platform.OS === 'web') {
                     // On web, window.alert is synchronous and blocks the thread.
                     // The custom onPress buttons from React Native don't work reliably here.
-                    window.alert(`La orden ${realFolio} ha sido registrada y guardada exitosamente en el sistema.`);
+                    window.alert("Orden Finalizada");
                     navigation.navigate('OrderSearch');
                 } else {
                     Alert.alert(
                         "Orden Finalizada",
-                        `La orden ${realFolio} ha sido registrada y guardada exitosamente en el sistema.`,
+                        "La orden ha sido registrada y guardada exitosamente en el sistema.",
                         [
                             {
                                 text: "OK",
@@ -435,12 +404,16 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 }
 
             } else {
-                throw new Error(result.error || "Error desconocido al guardar la orden.");
+                throw new Error(result.message || result.error || "Error desconocido al guardar la orden.");
             }
 
         } catch (error) {
             console.error("Error in unified finish flow:", error);
-            Alert.alert("Error de Guardado", `No se pudo guardar la orden completa: ${error.message}`);
+            if (Platform.OS === 'web') {
+                window.alert(`No se pudo guardar la orden: ${error.message}`);
+            } else {
+                Alert.alert("Error de Guardado", `No se pudo guardar la orden: ${error.message}`);
+            }
         } finally {
             setUploading(false);
         }

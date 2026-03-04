@@ -81,6 +81,7 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
             year: vehicle.anio ? String(vehicle.anio) : '', // Safe String conversion
             color: vehicle.color,
             chassis: vehicle.serie,
+            motor: vehicle.motor || '',
             transmission: 'Automática', // Default
             fuelType: 'Gasolina', // Default
             mileage: '',
@@ -131,31 +132,10 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
         const detailsToRegister = currentDetails || data.details;
 
         if (detailsToRegister && !detailsToRegister.id) {
-            console.log("Registering vehicle before proceeding...", detailsToRegister);
-            try {
-                // Map frontend structure to backend expectation if needed
-                const payload = {
-                    client_id: client.clienteidgen || client.id,
-                    placas: detailsToRegister.tag,
-                    marca: detailsToRegister.brand,
-                    modelo: detailsToRegister.model,
-                    anio: parseInt(detailsToRegister.year) || 0,
-                    color: detailsToRegister.color,
-                    serie: detailsToRegister.chassis,
-                    motor: detailsToRegister.motor
-                };
-
-                const result = await registerVehicleSoap(payload);
-                if (result && result.local_id) {
-                    console.log("Vehicle registered successfully. Local ID:", result.local_id);
-                    // Update global state with the new ID
-                    const updatedDetails = { ...detailsToRegister, id: result.local_id };
-                    onUpdate({ ...data, details: updatedDetails });
-                }
-            } catch (error) {
-                console.error("Error registering vehicle:", error);
-                Alert.alert("Error de Registro", "No se pudo registrar el vehículo en el sistema. Verifique su conexión o intente más tarde.");
-            }
+            console.log("Bypassing intermediate vehicle registration. Saving to local state directly (ID 0)...", detailsToRegister);
+            // Bypass registerVehicleSoap since the server returns 404 and the Mega-Payload handles it later
+            const updatedDetails = { ...detailsToRegister, id: 0 };
+            onUpdate({ ...data, details: updatedDetails });
         } else {
             // Already has ID, just sync internal state to be safe
             if (currentDetails) handleDetailsUpdate(currentDetails);

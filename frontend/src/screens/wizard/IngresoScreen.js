@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { AuthContext } from '../../context/AuthContext';
+import { getAsesores } from '../../services/asesores';
 
 // TimePicker Component
 const TimePickerRow = ({ label, timeValue, onTimeChange, minTime, disabled }) => {
@@ -285,6 +286,9 @@ const DatePickerFieldPoly = ({ label, dateValue, onDateChange, minimumDate, disa
 
 const IngresoScreen = ({ data, onUpdate, onNext }) => {
     const { userData } = useContext(AuthContext);
+    const [asesoresList, setAsesoresList] = useState([]);
+    const [loadingAsesores, setLoadingAsesores] = useState(false);
+
     const formatDate = (date) => {
         const day = date.getDate().toString().padStart(2, '0');
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -314,12 +318,40 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
     }, [data]);
 
     useEffect(() => {
-        // Enforce data linkage: If form is missing essential session info, inject it.
-        // But mainly we want to ensure Asesor defaults to current user if empty.
-        if (userData && !form.asesor) {
-            setForm(prev => ({ ...prev, asesor: `${userData.nombre} ${userData.apellido}` }));
+        // Enforce data linkage
+        if (userData) {
+            if (userData.usuarioclavepiso) {
+                // User has fixed floor advisor ID assigned
+                if (!form.asesor || !form.asesorId) {
+                    setForm(prev => ({
+                        ...prev,
+                        asesorId: userData.usuarioclavepiso,
+                        asesor: `${userData.nombre} ${userData.apellido}`
+                    }));
+                }
+            } else {
+                // User doesn't have a specific floor advisor assigned. We must fetch the list.
+                if (asesoresList.length === 0 && !loadingAsesores) {
+                    const fetchList = async () => {
+                        setLoadingAsesores(true);
+                        try {
+                            const list = await getAsesores();
+                            setAsesoresList(list || []);
+                            // Remove auto-select first in list
+                            if (!form.asesorId && !form.asesor && userData?.usuarioclavepiso) {
+                                // Fallback just in case
+                            }
+                        } catch (err) {
+                            console.error("Failed to fetch asesores", err);
+                        } finally {
+                            setLoadingAsesores(false);
+                        }
+                    };
+                    fetchList();
+                }
+            }
         }
-    }, [userData, form.asesor]);
+    }, [userData, form.asesor, form.asesorId, asesoresList.length]);
 
 
     const handleNext = () => {
@@ -381,25 +413,6 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
             <View style={styles.card}>
                 <View style={styles.row}>
                     <View style={[styles.fieldContainer, { flex: 1 }]}>
-                        <Text style={styles.label}>Serie</Text>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: '#e0e0e0', color: '#555' }]}
-                            value={form.serie}
-                            placeholder="-"
-                            editable={false}
-                        />
-                    </View>
-                    <View style={[styles.fieldContainer, { flex: 2, marginHorizontal: 10 }]}>
-                        <Text style={styles.label}>No. Orden</Text>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: '#e0e0e0', color: '#555' }]}
-                            value={form.noOrden}
-                            placeholder="-"
-                            keyboardType="numeric"
-                            editable={false}
-                        />
-                    </View>
-                    <View style={[styles.fieldContainer, { flex: 2 }]}>
                         <DatePickerFieldPoly
                             label="Fecha"
                             dateValue={form.fecha}
@@ -443,19 +456,42 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
 
                 <View style={[styles.fieldContainer, { marginTop: 15 }]}>
                     <Text style={styles.label}>Asesor de Piso</Text>
-                    <View style={styles.unifiedPickerContainer}>
-                        <Picker
-                            selectedValue={form.asesor}
-                            style={styles.pickerTransparent}
-                            onValueChange={(itemValue) => updateForm({ asesor: itemValue })}
-                        >
-                            {userData && (
-                                <Picker.Item
-                                    label={`${userData.nombre} ${userData.apellido}`}
-                                    value={`${userData.nombre} ${userData.apellido}`}
-                                />
-                            )}
-                        </Picker>
+                    <View style={[styles.unifiedPickerContainer, userData?.usuarioclavepiso ? { backgroundColor: '#e0e0e0' } : {}]}>
+                        {loadingAsesores ? (
+                            <ActivityIndicator size="small" color="#007bff" style={{ marginLeft: 15 }} />
+                        ) : (
+                            <Picker
+                                selectedValue={form.asesorId}
+                                style={[styles.pickerTransparent, userData?.usuarioclavepiso ? { color: '#555' } : {}]}
+                                enabled={!userData?.usuarioclavepiso}
+                                onValueChange={(itemValue) => {
+                                    // Find name string-safe
+                                    const selectedAsesor = asesoresList.find(a => a.apisocve.toString() === (itemValue || "").toString());
+                                    updateForm({
+                                        asesorId: itemValue,
+                                        asesor: selectedAsesor ? selectedAsesor.apisonom : form.asesor
+                                    });
+                                }}
+                            >
+                                {userData?.usuarioclavepiso ? (
+                                    <Picker.Item
+                                        label={`${userData.nombre} ${userData.apellido}`}
+                                        value={userData.usuarioclavepiso}
+                                    />
+                                ) : (
+                                    <>
+                                        <Picker.Item key="unselected" label="Seleccione" value="" />
+                                        {asesoresList.map(asesor => (
+                                            <Picker.Item
+                                                key={asesor.apisocve.toString()}
+                                                label={asesor.apisonom}
+                                                value={asesor.apisocve}
+                                            />
+                                        ))}
+                                    </>
+                                )}
+                            </Picker>
+                        )}
                     </View>
                 </View>
             </View>

@@ -1,0 +1,9 @@
+
+--- Testing http://172.16.71.199:8000/orden/listar with {'OrdenID': 346} ---
+Error: HTTPConnectionPool(host='172.16.71.199', port=8000): Read timed out. (read timeout=30)
+
+--- Testing http://172.16.71.199:8000/orden/listar with {'OrdenID': '346'} ---
+Error: HTTPConnectionPool(host='172.16.71.199', port=8000): Read timed out. (read timeout=30)
+
+--- Testing http://172.16.71.199:8000/orden/consultar/346 with None ---
+Error: HTTPConnectionPool(host='172.16.71.199', port=8000): Read timed out. (read timeout=30)

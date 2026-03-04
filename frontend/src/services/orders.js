@@ -68,9 +68,13 @@ export const getPendingOrder = async (sucursalId, usuarioId) => {
         throw error;
     }
 };
-export const getOrdersList = async (ordenId = null) => {
+export const getOrdersList = async (ordenId = null, sucursalId = null, ordenEstatus = 'A') => {
     try {
-        const payload = ordenId ? { OrdenID: ordenId } : {};
+        const payload = {};
+        if (ordenId) payload.OrdenID = ordenId;
+        if (sucursalId) payload.SucursalID = parseInt(sucursalId); // El backend prefiere int
+        payload.OrdenEstatus = ordenEstatus;
+
         console.log(`[Frontend] Fetching Orders List directly on .199... payload:`, payload);
         const response = await api.post('/orden/listar', payload);
         return response.data;
@@ -90,12 +94,11 @@ export const cancelOrder = async (orderId) => {
 export const saveOrderTotal = async (payload) => {
     /**
      * Guarda la orden completa usando el payload consolidado.
-     * Originalmente apuntaba a /api/orden/guardar_total, pero
-     * ahora apunta al nuevo broker en /api/orden/finalizar_proceso
-     * que realiza los dos pasos requeridos.
+     * Originalmente apuntaba a /api/orden/guardar_total o /orden/guardar_total
+     * Ahora apunta al nuevo endpoint proporcionado: /ingresos/crear
      */
     console.log(`[Frontend] Saving Consolidated Order directly on .199...`);
     // Point directly to the native external endpoint
-    const response = await api.post('/orden/guardar_total', payload);
+    const response = await api.post('/ingresos/crear', payload);
     return response.data;
 };

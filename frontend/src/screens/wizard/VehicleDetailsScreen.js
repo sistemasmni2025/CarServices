@@ -149,8 +149,8 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
 
     const handleNext = () => {
         // Basic Validation
-        if (!formData.tag || !formData.brand || !formData.model || !formData.year || !formData.color) {
-            Alert.alert("Campos Requeridos", "Por favor complete los campos marcados con * (Placas, Marca, Modelo, Año, Color).");
+        if (!formData.mileage || !formData.observaciones) {
+            Alert.alert("Campos Requeridos", "Por favor complete los campos marcados con *: Kilometraje (K.M.) y Observaciones.");
             return;
         }
 
@@ -169,7 +169,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <MaterialCommunityIcons name="card-account-details-outline" size={20} color="#666" style={styles.inputIcon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Placas *"
+                            placeholder="Placas"
                             value={formData?.tag || ''}
                             onChangeText={(t) => handleChange('tag', t)}
                             autoCapitalize="characters"
@@ -179,7 +179,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <MaterialCommunityIcons name="tag-outline" size={20} color="#666" style={styles.inputIcon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Marca *"
+                            placeholder="Marca"
                             value={formData?.brand || ''}
                             onChangeText={(t) => handleChange('brand', t)}
                             autoCapitalize="characters"
@@ -193,7 +193,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <MaterialCommunityIcons name="car-side" size={20} color="#666" style={styles.inputIcon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Modelo *"
+                            placeholder="Modelo"
                             value={formData?.model || ''}
                             onChangeText={(t) => handleChange('model', t)}
                             autoCapitalize="characters"
@@ -202,13 +202,12 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                     <View style={[styles.inputGroup, { flex: 0.8 }]}>
                         <MaterialCommunityIcons name="calendar" size={20} color="#666" style={styles.inputIcon} />
                         <TextInput
-                            style={[styles.input, formData?.isSoap && { backgroundColor: '#f0f0f0', color: '#666' }]}
-                            placeholder="Año *"
+                            style={styles.input}
+                            placeholder="Año"
                             value={formData?.year ? String(formData.year) : ''}
                             onChangeText={(t) => handleChange('year', t)}
                             keyboardType="numeric"
                             maxLength={4}
-                            editable={!formData?.isSoap}
                         />
                     </View>
                 </View>
@@ -224,7 +223,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                             style={[styles.input, { textAlignVertical: 'center', lineHeight: Platform.OS === 'web' ? 42 : undefined }]}
                             numberOfLines={1}
                         >
-                            {formData?.color || "Color *"}
+                            {formData?.color || "Color"}
                         </Text>
                         <MaterialCommunityIcons name="chevron-down" size={20} color="#ccc" />
                     </TouchableOpacity>
@@ -261,7 +260,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                     <MaterialCommunityIcons name="speedometer" size={20} color="#999" style={styles.inputIcon} />
                     <TextInput
                         style={styles.input}
-                        placeholder="Kilometraje (K.M.)"
+                        placeholder="Kilometraje (K.M.) *"
                         value={formData?.mileage || ''}
                         onChangeText={(t) => handleChange('mileage', t)}
                         keyboardType="numeric"
@@ -274,7 +273,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                     <MaterialCommunityIcons name="comment-text-outline" size={20} color="#999" style={[styles.inputIcon, { marginTop: 4 }]} />
                     <TextInput
                         style={[styles.input, { textAlignVertical: 'top', height: '100%' }]}
-                        placeholder="Observaciones"
+                        placeholder="Observaciones *"
                         value={formData?.observaciones || ''}
                         onChangeText={(t) => handleChange('observaciones', t)}
                         multiline={true}
@@ -285,7 +284,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
 
             {/* Fuel Gauge - Enhanced Visual */}
             <View style={styles.visualSection}>
-                <FuelGauge value={formData?.fuelLevel || 50} onChange={(v) => handleChange('fuelLevel', v)} />
+                <FuelGauge value={formData?.fuelLevel !== undefined ? formData.fuelLevel : 50} onChange={(v) => handleChange('fuelLevel', v)} />
             </View>
 
             {/* Inventory Checklist */}
