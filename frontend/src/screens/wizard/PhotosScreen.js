@@ -53,15 +53,15 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
     const [uploadedKeys, setUploadedKeys] = useState(new Set()); // Track uploaded photos
 
     const photoLabels = {
-        frontal: 'ExtFront',
-        lateralIzquierdo: 'ExtLatIzq',
-        lateralDerecho: 'ExtLatDer',
-        trasero: 'ExtTras',
-        interior1: 'IntTab',
-        interior2: 'IntAsientos',
-        interior3: 'IntPuertas',
-        interior4: 'IntTecho',
-        adicional: 'OtrosMotor'
+        frontal: 'EXTFRON',
+        lateralIzquierdo: 'EXTLATIZQ',
+        lateralDerecho: 'EXTLATDER',
+        trasero: 'EXTTRAS',
+        interior1: 'INTTABL',
+        interior2: 'INTASIEN',
+        interior3: 'INTPUER',
+        interior4: 'INTTECH',
+        adicional: 'OTRMOT'
     };
 
     useEffect(() => {

@@ -91,7 +91,8 @@ const HorizontalWizardScreen = ({ navigation }) => {
             interior4: null,
             adicional: null,
         },
-        firma: null,
+        firmaPrestador: null,
+        firmaCliente: null,
     };
 
     const [wizardData, setWizardData] = useState(initialWizardData);
@@ -253,46 +254,50 @@ const HorizontalWizardScreen = ({ navigation }) => {
         setUploading(true);
 
         try {
-            // 1. Procesar Firma si existe (Base64 -> File)
-            let signatureUri = null;
-            if (currentData.firma) {
+            // 1. Procesar Firmas si existen (Base64 -> File)
+            let firmaPrestadorUri = null;
+            let firmaClienteUri = null;
+
+            if (currentData.firmaPrestador) {
                 try {
                     if (Platform.OS === 'web') {
-                        // En Web, la firma ya es una cadena Base64 generada por el bypass o capture
-                        signatureUri = currentData.firma;
+                        // En Web pasamos la cadena nativa y el services/orders.js le dará formato .bmp
+                        firmaPrestadorUri = currentData.firmaPrestador;
                     } else {
-                        const sigFilename = `firma_${currentData.ingreso.noOrden || Date.now()}.png`;
-                        signatureUri = `${FileSystem.cacheDirectory}${sigFilename}`;
-                        const base64Data = currentData.firma.split(',')[1] || currentData.firma;
-                        await FileSystem.writeAsStringAsync(signatureUri, base64Data, { encoding: 'base64' });
+                        const sigFilename = `firma_prestador_${currentData.ingreso.noOrden || Date.now()}.bmp`;
+                        firmaPrestadorUri = `${FileSystem.cacheDirectory}${sigFilename}`;
+                        const base64Data = currentData.firmaPrestador.split(',')[1] || currentData.firmaPrestador;
+                        await FileSystem.writeAsStringAsync(firmaPrestadorUri, base64Data, { encoding: 'base64' });
                     }
                 } catch (sigErr) {
-                    console.error("Error saving signature:", sigErr);
+                    console.error("Error saving provider signature:", sigErr);
                 }
             }
 
-            // 2. Subir Fotos Independentimentemente al Nuevo Endpoint
+            if (currentData.firmaCliente) {
+                try {
+                    if (Platform.OS === 'web') {
+                        firmaClienteUri = currentData.firmaCliente;
+                    } else {
+                        const sigFilename = `firma_cliente_${currentData.ingreso.noOrden || Date.now()}.bmp`;
+                        firmaClienteUri = `${FileSystem.cacheDirectory}${sigFilename}`;
+                        const base64Data = currentData.firmaCliente.split(',')[1] || currentData.firmaCliente;
+                        await FileSystem.writeAsStringAsync(firmaClienteUri, base64Data, { encoding: 'base64' });
+                    }
+                } catch (sigErr) {
+                    console.error("Error saving consumer signature:", sigErr);
+                }
+            }
+
+            // 2. Adjuntar las fotos y las firmas al payload del service
             const fotosDict = { ...currentData.fotos };
-            if (signatureUri) fotosDict['firma'] = signatureUri;
+            if (firmaPrestadorUri) fotosDict['firmaPrestador'] = firmaPrestadorUri;
+            if (firmaClienteUri) fotosDict['firmaCliente'] = firmaClienteUri;
 
             console.log("[Wizard] Bypassing individual photo uploads to /evidencias/nueva (Server returns 422). Photos will be handled if backend configures mega-payload support or another route.");
 
-            // Bypass individual uploads since route is broken/obsolete
-            /*
-            const uploadPromises = Object.entries(fotosDict).map(async ([key, uri]) => {
-                if (uri && (uri.startsWith('file:') || uri.startsWith('blob:') || uri.startsWith('data:'))) {
-                    const label = strLabels[key] || "Foto General";
-                    try {
-                        await uploadPhoto(uri, label, currentData.ingreso.noOrden);
-                    } catch (err) {
-                        console.error(`[Wizard] Error uploading photo ${key}:`, err);
-                    }
-                }
-            });
-            await Promise.all(uploadPromises);
-            */
-
             // Ya no enviamos evidencia pesada en el MegaPayload para prevenir el error 1406
+            // Las fotos se enviarán individualmente a /evidencias/nueva una vez que tengamos el OrdenID real
             const evidenciaPayload = [];
 
             // 3. Preparar Inspección
@@ -355,13 +360,6 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     VehiculoIDGen: parseInt(currentData.vehiculo.details.id || 0),
                     ClienteID: parseInt(currentData.cliente?.id || 0)
                 },
-                Evidencia: evidenciaPayload.length > 0 ? evidenciaPayload : [{
-                    OrdenID: 0,
-                    TipoEvidenciaID: 1,
-                    Fotografia: "", // string vacío si no hay foto real, o base64
-                    EvidenciaFechaToma: isoDateStr,
-                    EvidenciaEstatus: "A"
-                }],
                 Inspeccion: inspeccionPayload.length > 0 ? inspeccionPayload : [{
                     OrdenID: 0,
                     ValoracionID: 1,
@@ -369,13 +367,14 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 }]
             };
 
-            console.log("[Wizard] Sending Mega-Payload...");
-            const result = await saveOrderTotal(megaPayload);
+            console.log("[Wizard] Sending Multipart Mega-Payload...");
+            const result = await saveOrderTotal(megaPayload, fotosDict);
             console.log("[Wizard] Save Result:", result);
 
             if (result && (result.success !== false)) {
                 // Trazar el resultado dual (REST + SOAP)
                 const realFolio = result.soap_data && result.soap_data.Ordser ? result.soap_data.Ordser : (currentData.ingreso.noOrden || "N/A");
+                const finalOrdenId = result.rest_data?.OrdenID || result.OrdenID || megaPayload.Orden.OrdenID;
 
                 // Clean up memoria local
                 setWizardData(initialWizardData);
@@ -460,7 +459,10 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 return (
                     <SummaryScreen
                         wizardData={wizardData}
-                        onUpdate={(sig) => handleUpdateData('firma', sig)}
+                        onUpdate={(sigs) => {
+                            if (sigs && sigs.firmaPrestador) handleUpdateData('firmaPrestador', sigs.firmaPrestador);
+                            if (sigs && sigs.firmaCliente) handleUpdateData('firmaCliente', sigs.firmaCliente);
+                        }}
                         onFinish={handleFinish}
                     />
                 );

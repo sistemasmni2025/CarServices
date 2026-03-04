@@ -130,20 +130,22 @@ export const prepareEvidencePayload = async (fotos, orderId) => {
         interior3: 7,
         interior4: 8,
         adicional: 9,
-        firma: 10
+        firmaPrestador: 100,
+        firmaCliente: 101
     };
 
     const strLabels = {
-        frontal: "ExtFront",
-        lateralIzquierdo: "ExtLatIzq",
-        lateralDerecho: "ExtLatDer",
-        trasero: "ExtTras",
-        interior1: "IntTab",
-        interior2: "IntAsientos",
-        interior3: "IntPuertas",
-        interior4: "IntTecho",
-        adicional: "OtrosMotor",
-        firma: "FirmaCliente"
+        frontal: "EXTFRON",
+        lateralIzquierdo: "EXTLATIZQ",
+        lateralDerecho: "EXTLATDER",
+        trasero: "EXTTRAS",
+        interior1: "INTTABL",
+        interior2: "INTASIEN",
+        interior3: "INTPUER",
+        interior4: "INTTECH",
+        adicional: "OTRMOT",
+        firmaPrestador: "FirmaPrestador",
+        firmaCliente: "FirmaCliente"
     };
     const evidencia = [];
     const timestamp = new Date().toISOString();

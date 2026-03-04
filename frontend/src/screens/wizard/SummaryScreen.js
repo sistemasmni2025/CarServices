@@ -56,7 +56,8 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
      * Permite firmar la orden y finalizar el proceso.
      */
     const [modalVisible, setModalVisible] = useState(false);
-    const [signature, setSignature] = useState(wizardData.firma || null);
+    const [firmaPrestador, setFirmaPrestador] = useState(wizardData.firmaPrestador || null);
+    const [firmaCliente, setFirmaCliente] = useState(wizardData.firmaCliente || null);
     const colorNameMap = {
         'BLANCO': '#FFFFFF',
         'NEGRO': '#000000',
@@ -219,21 +220,21 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
                 <TouchableOpacity style={styles.signButton} onPress={() => setModalVisible(true)}>
                     <MaterialCommunityIcons name="pen" size={20} color="#fff" />
                     <Text style={styles.signButtonText}>
-                        {signature ? 'Documento Firmado' : 'Firmar Contrato'}
+                        {(firmaPrestador && firmaCliente) ? 'Contratos Firmados' : 'Firmar Contratos'}
                     </Text>
-                    {signature && <MaterialCommunityIcons name="check-circle" size={20} color="#4CAF50" />}
+                    {(firmaPrestador && firmaCliente) && <MaterialCommunityIcons name="check-circle" size={20} color="#4CAF50" />}
                 </TouchableOpacity>
             </View>
 
             <View style={styles.footer}>
                 <TouchableOpacity
-                    style={[styles.finishButton, !signature && styles.disabledButton]}
+                    style={[styles.finishButton, !(firmaPrestador && firmaCliente) && styles.disabledButton]}
                     onPress={() => {
-                        if (!signature) {
-                            Alert.alert('Firma Requerida', 'Por favor firme el documento antes de finalizar.');
+                        if (!firmaPrestador || !firmaCliente) {
+                            Alert.alert('Firmas Requeridas', 'Por favor asegúrese de capturar la firma del Prestador y del Cliente antes de finalizar.');
                             return;
                         }
-                        onFinish({ ...wizardData, firma: signature });
+                        onFinish({ ...wizardData, firmaPrestador, firmaCliente });
                     }}
                 >
                     <Text style={styles.finishButtonText}>Finalizar y Guardar Orden</Text>
@@ -244,9 +245,13 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
             <SignatureModal
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
-                onSave={(sig) => {
-                    setSignature(sig);
-                    if (onUpdate) onUpdate(sig);
+                onSave={(sigs) => {
+                    setFirmaPrestador(sigs.firmaPrestador);
+                    setFirmaCliente(sigs.firmaCliente);
+                    if (onUpdate) {
+                        // Update both properties individually or ignore mapping since onFinish captures both eventually
+                        onUpdate(sigs);
+                    }
                     setModalVisible(false);
                 }}
             />

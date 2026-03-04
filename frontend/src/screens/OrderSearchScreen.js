@@ -123,6 +123,14 @@ const OrderSearchScreen = ({ navigation }) => {
                     <Text style={styles.cardText}>{item.VehiculoPlacas || 'Sin Placas'}</Text>
                 </View>
                 <View style={styles.cardRow}>
+                    <MaterialCommunityIcons name="calendar-clock" size={16} color="#666" />
+                    <Text style={styles.cardText}>Días en Servicio: {item.OrdenTiempo !== undefined && item.OrdenTiempo !== null ? item.OrdenTiempo : '0'}</Text>
+                </View>
+                <View style={styles.cardRow}>
+                    <MaterialCommunityIcons name="cash-multiple" size={16} color="#666" />
+                    <Text style={styles.cardText}>Importe: ${item.OrdenImporte !== undefined && item.OrdenImporte !== null ? item.OrdenImporte : '0.00'}</Text>
+                </View>
+                <View style={styles.cardRow}>
                     <MaterialCommunityIcons name="store" size={16} color="#666" />
                     <Text style={styles.cardText}>{item.SucursalNombre} - Asesor: {item.AsesorNombre || item.AsesorID || 'N/A'}</Text>
                 </View>

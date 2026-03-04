@@ -180,10 +180,13 @@ const SignatureModal = ({ visible, onClose, onSave }) => {
 
     const handleSaveDocument = () => {
         if (consumerSignature && providerSignature) {
-            onSave(consumerSignature); // Assuming onSave only needs consumer signature, adjust if both are needed
+            onSave({
+                firmaPrestador: providerSignature,
+                firmaCliente: consumerSignature
+            });
             onClose();
         } else {
-            // Ideally trigger alert, but sticking to logic
+            // Requerir ambas firmas
         }
     };
 
