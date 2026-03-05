@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, Platform, FlatList, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 import AgendaBoard from '../components/AgendaBoard';
 import { getOrdersList } from '../services/orders';
 import { AuthContext } from '../context/AuthContext';
@@ -14,6 +15,8 @@ const OrderSearchScreen = ({ navigation }) => {
     const [ordersList, setOrdersList] = useState([]);
     const [isLoadingList, setIsLoadingList] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState('A'); // A: Abierta, T: Terminada, C: Cancelada
+    const [sortBy, setSortBy] = useState('folio'); // Opciones: diasServicio, folio, cliente, importe
+    const [sortOrder, setSortOrder] = useState('desc'); // Opciones: 'desc' (default), 'asc'
     const { selectedBranch } = useContext(AuthContext);
 
     useEffect(() => {
@@ -96,6 +99,26 @@ const OrderSearchScreen = ({ navigation }) => {
             </TouchableOpacity>
         </View>
     );
+
+    const getSortedOrders = () => {
+        let sorted = [...ordersList];
+
+        if (sortBy === 'diasServicio') {
+            sorted.sort((a, b) => (b.OrdenTiempo || 0) - (a.OrdenTiempo || 0)); // Mayor tiempo primero
+        } else if (sortBy === 'folio') {
+            sorted.sort((a, b) => b.OrdenID - a.OrdenID); // Folio más reciente primero (descendente)
+        } else if (sortBy === 'cliente') {
+            sorted.sort((a, b) => (a.ClienteNombre || '').localeCompare(b.ClienteNombre || '')); // Alfabético
+        } else if (sortBy === 'importe') {
+            sorted.sort((a, b) => (b.OrdenImporte || 0) - (a.OrdenImporte || 0)); // Mayor importe primero
+        }
+
+        if (sortOrder === 'asc') {
+            sorted.reverse();
+        }
+
+        return sorted;
+    };
 
     const renderOrderItem = ({ item }) => (
         <TouchableOpacity style={styles.orderCard} onPress={() => handleOrderPress(item.OrdenID)}>
@@ -183,6 +206,33 @@ const OrderSearchScreen = ({ navigation }) => {
                 ) : (
                     <View style={styles.listContainer}>
                         <StatusFilter />
+
+                        {/* Selector de Ordenamiento */}
+                        <View style={styles.sortContainer}>
+                            <TouchableOpacity
+                                onPress={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                                style={styles.sortDirectionButton}
+                            >
+                                <MaterialCommunityIcons
+                                    name={sortOrder === 'desc' ? 'sort-descending' : 'sort-ascending'}
+                                    size={24}
+                                    color="#007BFF"
+                                />
+                            </TouchableOpacity>
+                            <Text style={styles.sortLabel}>Ordenar por:</Text>
+                            <Picker
+                                selectedValue={sortBy}
+                                style={styles.picker}
+                                onValueChange={(itemValue) => setSortBy(itemValue)}
+                                mode="dropdown"
+                            >
+                                <Picker.Item label="Folio" value="folio" />
+                                <Picker.Item label="Días en Servicio" value="diasServicio" />
+                                <Picker.Item label="Importe" value="importe" />
+                                <Picker.Item label="Cliente" value="cliente" />
+                            </Picker>
+                        </View>
+
                         {isLoadingList ? (
                             <View style={styles.centerContainer}>
                                 <ActivityIndicator size="large" color="#007BFF" />
@@ -198,7 +248,7 @@ const OrderSearchScreen = ({ navigation }) => {
                             </View>
                         ) : (
                             <FlatList
-                                data={ordersList}
+                                data={getSortedOrders()}
                                 keyExtractor={(item) => (item.OrdenID ? item.OrdenID.toString() : Math.random().toString())}
                                 renderItem={renderOrderItem}
                                 contentContainerStyle={styles.flatListContent}
@@ -318,6 +368,36 @@ const styles = StyleSheet.create({
     },
     activeStatusOptionText: {
         color: '#FFF',
+        fontWeight: 'bold',
+    },
+    sortContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFF',
+        height: 50,
+        marginHorizontal: 15,
+        marginBottom: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    sortDirectionButton: {
+        paddingHorizontal: 12,
+        height: '100%',
+        justifyContent: 'center',
+        borderRightWidth: 1,
+        borderRightColor: '#E0E0E0',
+    },
+    sortLabel: {
+        fontSize: 14,
+        color: '#333',
+        marginLeft: 5,
+        fontWeight: 'bold',
+    },
+    picker: {
+        flex: 1,
+        height: 50,
+        color: '#333',
     },
     listContainer: {
         flex: 1,
