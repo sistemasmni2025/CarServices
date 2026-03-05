@@ -308,7 +308,17 @@ const SignatureModal = ({ visible, onClose, onSave }) => {
                                         confirmText="Confirmar"
                                         autoClear={false}
                                         imageType="image/png"
-                                        webStyle={`.m-signature-pad--footer {display: none; margin: 0px;}`}
+                                        backgroundColor="#ffffff"
+                                        penColor="#000000"
+                                        minWidth={2}
+                                        maxWidth={4}
+                                        dotSize={3}
+                                        webStyle={`
+                                            .m-signature-pad--footer {display: none; margin: 0px;}
+                                            body,html {width: 100%; height: 100%; margin: 0px; padding: 0px;}
+                                            .m-signature-pad {box-shadow: none; border: none; background-color: #ffffff;}
+                                            canvas {width: 100% !important; height: 100% !important;}
+                                        `}
                                     />
                                 </View>
                             )}
