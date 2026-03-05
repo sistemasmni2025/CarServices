@@ -18,7 +18,7 @@ export const getClientById = async (id) => {
 export const searchClients = async (query) => {
     console.log(`[clients.js] native fetch starting for: ${query}`);
     try {
-        const response = await fetch(`http://172.16.71.199:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`http://172.16.71.173:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'

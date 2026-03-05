@@ -13,7 +13,7 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
             AsesorID: asesorId ? asesorId.toString() : "1"
         };
 
-        console.log(`[Frontend] Fetching/Creating Order ID directly on .199...`, payload);
+        console.log(`[Frontend] Fetching/Creating Order ID directly on .173...`, payload);
         // Call the remote backend directly
         const response = await api.post('/orden/crear', payload);
         const data = response.data;
@@ -36,7 +36,7 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
 };
 
 export const createOrder = async (orderData) => {
-    // Persist directly on .199
+    // Persist directly on .173
     const response = await api.post('/orden/crear', orderData);
     return response.data;
 };
@@ -86,7 +86,7 @@ export const getOrdersList = async (ordenId = null, sucursalId = null, ordenEsta
 };
 
 export const cancelOrder = async (orderId) => {
-    console.log(`[Frontend] Cancelling Order ${orderId} on .199...`);
+    console.log(`[Frontend] Cancelling Order ${orderId} on .173...`);
     const response = await api.post('/orden/cancelar', { OrdenID: orderId });
     console.log(`[Frontend] Cancel Response:`, response.data);
     return response.data;
@@ -97,7 +97,7 @@ export const saveOrderTotal = async (payload, fotosDict = {}) => {
      * Guarda la orden completa usando el nuevo endpoint consolidado /ingresos/nuevo.
      * Envía la data estructurada (JSON), la metadata de las fotos (JSON) y las fotos físicas en un multipart/form-data.
      */
-    console.log(`[Frontend] Saving Consolidated Order via multipart to .199 /ingresos/nuevo...`);
+    console.log(`[Frontend] Saving Consolidated Order via multipart to .173 /ingresos/nuevo...`);
 
     try {
         const formData = new FormData();

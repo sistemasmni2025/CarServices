@@ -30,7 +30,7 @@ const MOCK_INSPECTIONS = {
 
 export const getInspectionChecklist = async () => {
     try {
-        // Pointing directly to native .199 endpoint
+        // Pointing directly to native .173 endpoint
         const response = await api.post('/valoraciones/listar', {});
         return response.data;
     } catch (error) {
@@ -42,8 +42,8 @@ export const getInspectionChecklist = async () => {
 export const saveInspections = async (inspections) => {
     try {
         // inspections: Array of { OrdenID, ValoracionID, InspeccionValor }
-        // Pointing directly to port 3000 on .199
-        const response = await api.post('http://172.16.71.199:3000/api/inspeccion/guardar', inspections);
+        // Pointing directly to port 3000 on .173
+        const response = await api.post('http://172.16.71.173:8000/api/inspeccion/guardar', inspections);
         return response.data;
     } catch (error) {
         console.error("Error saving inspections:", error);

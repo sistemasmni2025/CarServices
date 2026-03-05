@@ -1,7 +1,7 @@
 import api from './api';
 
 export const createVehicle = async (vehicleData) => {
-    // Sync directly with .199
+    // Sync directly with .173
     const response = await api.post('/vehiculos/crear', vehicleData);
     return response.data;
 };
@@ -18,7 +18,7 @@ export const getUniqueCatalog = async () => {
 
 export const searchVehiclesSoap = async (clientId) => {
     /**
-     * Busca vehículos directamente en el backend .199
+     * Busca vehículos directamente en el backend .173
      */
     try {
         const response = await api.get(`/vehiculos/soap/${clientId}`);
@@ -30,7 +30,7 @@ export const searchVehiclesSoap = async (clientId) => {
         }
         return [];
     } catch (error) {
-        console.warn("Vehicles Search Failed on .199", error);
+        console.warn("Vehicles Search Failed on .173", error);
         return [];
     }
 };
