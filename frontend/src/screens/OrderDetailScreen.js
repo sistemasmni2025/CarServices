@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getOrdersList } from '../services/orders';
 
 const OrderDetailScreen = ({ route, navigation }) => {
-    const { ordenId } = route.params || {};
+    const { ordenId, ordenIdGen } = route.params || {};
     const [orderDetails, setOrderDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -49,7 +49,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
         return (
             <View style={styles.detailCard}>
                 <View style={styles.detailHeaderBox}>
-                    <Text style={styles.detailOrderId}>{orderInfo.OrdenIDGen || `Orden ID: ${orderInfo.OrdenID}`}</Text>
+                    <Text style={styles.detailOrderId}>{ordenIdGen || orderInfo.OrdenIDGen || `Orden ID: ${orderInfo.OrdenID}`}</Text>
                     <View style={styles.detailTypeBadge}>
                         <Text style={styles.detailTypeBadgeText}>Tipo {orderInfo.OrdenTipo || 'N/A'}</Text>
                     </View>

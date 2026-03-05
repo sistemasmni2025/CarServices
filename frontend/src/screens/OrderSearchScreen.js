@@ -73,8 +73,8 @@ const OrderSearchScreen = ({ navigation }) => {
         }
     };
 
-    const handleOrderPress = (ordenId) => {
-        navigation.navigate('OrderDetail', { ordenId });
+    const handleOrderPress = (item) => {
+        navigation.navigate('OrderDetail', { ordenId: item.OrdenID, ordenIdGen: item.OrdenIDGen });
     };
 
     const StatusFilter = () => (
@@ -121,7 +121,7 @@ const OrderSearchScreen = ({ navigation }) => {
     };
 
     const renderOrderItem = ({ item }) => (
-        <TouchableOpacity style={styles.orderCard} onPress={() => handleOrderPress(item.OrdenID)}>
+        <TouchableOpacity style={styles.orderCard} onPress={() => handleOrderPress(item)}>
             <View style={styles.cardHeader}>
                 <Text style={styles.cardOrderId}>{item.OrdenIDGen || `ID: ${item.OrdenID}`}</Text>
                 <View style={[
