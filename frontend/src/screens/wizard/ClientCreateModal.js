@@ -96,11 +96,53 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
             return;
         }
 
+        // Validaciones básicas
+        const cleanRFC = formData.rfc.trim().toUpperCase().substring(0, 13);
+
         setIsLoading(true);
         try {
-            const newClient = await createClient(formData);
-            const clientWithPlacas = { ...newClient, placas: '' };
-            onClientCreated(clientWithPlacas);
+            // Mapeo exacto basado en la captura de Postman proporcionada
+            const payloadPostman = {
+                ClienteClave: `C${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`,
+                ClienteNombre: formData.nombre.trim(),
+                ClienteRazon: formData.razon_social ? formData.razon_social.trim() : formData.nombre.trim(),
+                ClienteRegimen: formData.regimen_fiscal || "616 - Sin obligaciones fiscales",
+                ClienteRFC: cleanRFC,
+                ClienteDomicilio: formData.domicilio ? formData.domicilio.trim() : "Conocido",
+                ClienteDomicilio2: formData.domicilio2 ? formData.domicilio2.trim() : "",
+                ClienteCiudad: formData.ciudad ? formData.ciudad.trim() : "Celaya",
+                ClienteEstadoClave: formData.estado ? formData.estado.substring(0, 3).toUpperCase() : "GTO",
+                ClienteEstadoNombre: formData.estado || "Guanajuato",
+                ClienteCP: formData.cp ? formData.cp.trim() : "38000",
+                ClienteCategoria: "1",
+                ClienteDiasCredito: 30,
+                // Agregamos teléfono y correo si existen, aunque no estaban en el ejemplo básico,
+                // la bd suele tenerlos o los ignora si no están mapeados.
+                ClienteTelefono: formData.telefono ? formData.telefono.trim() : "",
+                ClienteEmail: formData.email ? formData.email.trim() : ""
+            };
+
+            console.log("[ClientCreateModal] Payload a enviar:", payloadPostman);
+            const responseBackend = await createClient(payloadPostman);
+            console.log("[ClientCreateModal] Respuesta de creacion:", responseBackend);
+            
+            // Construimos el objeto cliente como lo espera el flujo del Wizard (ClientSearchScreen.js)
+            const newClientUI = {
+                id: responseBackend?.ClienteID || responseBackend?.id || payloadPostman.ClienteClave,
+                nombre: payloadPostman.ClienteNombre,
+                rfc: payloadPostman.ClienteRFC,
+                razon_social: payloadPostman.ClienteRazon,
+                regimen_fiscal: payloadPostman.ClienteRegimen,
+                domicilio: payloadPostman.ClienteDomicilio,
+                cp: payloadPostman.ClienteCP,
+                ciudad: payloadPostman.ClienteCiudad,
+                estado: payloadPostman.ClienteEstadoNombre,
+                telefono: payloadPostman.ClienteTelefono,
+                email: payloadPostman.ClienteEmail,
+                placas: ''
+            };
+
+            onClientCreated(newClientUI);
 
             // Reset form
             setFormData({
@@ -112,7 +154,10 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
 
         } catch (error) {
             console.error("Error creating client:", error);
-            Alert.alert("Error", "No se pudo crear el cliente.");
+            if (error.response) {
+                console.error("Backend validation details:", error.response.data);
+            }
+            Alert.alert("Error", "No se pudo crear el cliente. Verifica que el RFC no esté duplicado o que los datos sean correctos.");
         } finally {
             setIsLoading(false);
         }

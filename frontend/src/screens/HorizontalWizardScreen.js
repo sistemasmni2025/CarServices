@@ -11,7 +11,7 @@ import PhotosScreen from './wizard/PhotosScreen';
 import SummaryScreen from './wizard/SummaryScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../context/AuthContext';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useIsFocused } from '@react-navigation/native';
 
 const HorizontalWizardScreen = ({ navigation }) => {

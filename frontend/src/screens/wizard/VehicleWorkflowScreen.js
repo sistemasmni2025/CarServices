@@ -75,6 +75,7 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
     const handleVehicleSelect = (vehicle) => {
         // Map SOAP vehicle to local state structure (Pre-fill details)
         const details = {
+            id: vehicle.id || vehicle.VehiculoID || null, // Persist possible ID from newly created ones
             tag: vehicle.placas,
             brand: vehicle.marca,
             model: vehicle.modelo,
@@ -89,7 +90,7 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
             colorHex: '#FFFFFF',
             observaciones: '',
             isSoap: true,
-            soapId: vehicle.placas
+            soapId: vehicle.placas || vehicle.id
         };
         onUpdate({ ...data, details });
         setStep(2); // Go to Details directly
@@ -203,6 +204,7 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
                     onSelect={handleVehicleSelect}
                     onNew={handleNewVehicle}
                     isLoading={loading}
+                    client={client}
                 />
             )}
             {step === 1 && (

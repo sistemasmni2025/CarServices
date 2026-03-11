@@ -5,7 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import api from './api';
 
 // Use remote endpoint directly
-const UPLOAD_URL = 'http://172.16.71.173:8000/evidencias/nueva';
+const UPLOAD_URL = 'http://51.79.17.52:8000/evidencias/nueva';
 
 const optimizeImage = async (uri) => {
     /**
@@ -152,8 +152,13 @@ export const prepareEvidencePayload = async (fotos, orderId) => {
 
     for (const [key, uri] of Object.entries(fotos)) {
         if (uri) {
-            const base64 = await getImageBase64(uri);
+            let base64 = await getImageBase64(uri);
             if (base64) {
+                if (key === 'firmaPrestador' || key === 'firmaCliente') {
+                    // Trick the backend's base64 parser into prepending the dot for the BMP extension
+                    base64 = base64.replace('data:image/png', 'data:image/.bmp');
+                }
+
                 evidencia.push({
                     EvidenciaID: null,
                     OrdenID: 0,

@@ -111,7 +111,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                 <MaterialCommunityIcons name="account-check" size={40} color="#4CAF50" />
                             </View>
                             <View style={styles.clientDetails}>
-                                <Text style={styles.clientName}>{selectedClient.nombre}</Text>
+                                <Text style={styles.clientName}>{selectedClient.id ? `${selectedClient.id} - ` : ''}{selectedClient.nombre}</Text>
                                 <Text style={styles.clientInfo}>{selectedClient.rfc}</Text>
                                 <Text style={styles.clientInfo}>{selectedClient.telefono}</Text>
                                 <Text style={styles.clientInfo}>{selectedClient.email}</Text>
@@ -159,7 +159,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                     renderItem={({ item }) => (
                                         <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectClient(item)}>
                                             <View>
-                                                <Text style={styles.resultName}>{item.nombre || 'Sin Nombre'}</Text>
+                                                <Text style={styles.resultName}>{item.id ? `${item.id} - ` : ''}{item.nombre || 'Sin Nombre'}</Text>
                                                 <Text style={styles.resultSub}>{item.rfc || 'Sin RFC'} {item.placas ? `• ${item.placas}` : ''}</Text>
                                             </View>
                                             <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
@@ -218,7 +218,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
 
                                     <View style={styles.inputGroup}>
                                         <Text style={styles.label}>Nombre / Razón Social</Text>
-                                        <Text style={styles.readOnlyText}>{selectedClient.nombre}</Text>
+                                        <Text style={styles.readOnlyText}>{selectedClient.id ? `${selectedClient.id} - ` : ''}{selectedClient.nombre}</Text>
                                         {/* Fallback to razon_social if needed, though usually one or other implies name */}
                                     </View>
 

@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import VehicleCreateModal from './VehicleCreateModal';
 
-const VehicleListScreen = ({ vehicles, onSelect, onNew, isLoading }) => {
+const VehicleListScreen = ({ vehicles, onSelect, onNew, isLoading, client }) => {
     /**
      * Pantalla de Lista de Vehículos.
      * Muestra los vehículos registrados del cliente seleccionado.
      * Permite buscar por placas o agregar uno nuevo.
      */
     const [searchQuery, setSearchQuery] = useState('');
+    const [isCreateModalVisible, setCreateModalVisible] = useState(false);
 
     const filteredVehicles = React.useMemo(() => {
         return vehicles.filter(v => {
@@ -62,16 +64,24 @@ const VehicleListScreen = ({ vehicles, onSelect, onNew, isLoading }) => {
             <Text style={styles.headerTitle}>Vehículos Registrados</Text>
             <Text style={styles.subTitle}>Seleccione un vehículo o registre uno nuevo.</Text>
 
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Buscar por placas..."
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    autoCapitalize="characters"
-                />
+            {/* Search Bar - Compact Layout similar to ClientSearchScreen */}
+            <View style={styles.searchRow}>
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Buscar por placas..."
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        autoCapitalize="characters"
+                    />
+                </View>
+                <TouchableOpacity
+                    style={styles.compactAddButton}
+                    onPress={() => setCreateModalVisible(true)}
+                >
+                    <Ionicons name="add" size={24} color="#fff" />
+                </TouchableOpacity>
             </View>
 
             {/* Temporary Debug: Show count */}
@@ -90,14 +100,19 @@ const VehicleListScreen = ({ vehicles, onSelect, onNew, isLoading }) => {
                         </Text>
                     </View>
                 }
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={{ paddingBottom: 20 }}
                 showsVerticalScrollIndicator={false}
             />
 
-            <TouchableOpacity style={styles.addButton} onPress={onNew}>
-                <Ionicons name="add-circle-outline" size={24} color="#fff" style={styles.addIcon} />
-                <Text style={styles.addButtonText}>Registrar Nuevo Vehículo</Text>
-            </TouchableOpacity>
+            <VehicleCreateModal 
+                visible={isCreateModalVisible}
+                onClose={() => setCreateModalVisible(false)}
+                client={client}
+                onVehicleCreated={(newVehicle) => {
+                    setCreateModalVisible(false);
+                    onSelect(newVehicle); // Pasa directo al paso de detalles con el vehículo ya registrado
+                }}
+            />
         </KeyboardAvoidingView>
     );
 };
@@ -170,42 +185,40 @@ const styles = StyleSheet.create({
         color: '#888',
         marginTop: 1,
     },
-    addButton: {
-        backgroundColor: '#28a745',
+    searchRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: 15,
-        borderRadius: 12,
-        marginTop: 10,
-        elevation: 3,
-    },
-    addButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    addIcon: {
-        marginRight: 10,
+        gap: 10,
+        marginBottom: 15,
     },
     searchContainer: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        marginBottom: 15,
+        backgroundColor: '#f9f9f9',
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#e0e0e0',
+        borderRadius: 20,
+        paddingHorizontal: 12,
+        height: 40,
     },
     searchIcon: {
-        marginRight: 10,
+        marginRight: 8,
     },
     searchInput: {
         flex: 1,
-        height: 40,
-        fontSize: 16,
+        height: '100%',
+        fontSize: 13,
         color: '#333',
+    },
+    compactAddButton: {
+        backgroundColor: '#4CAF50',
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 2,
     }
 });
 

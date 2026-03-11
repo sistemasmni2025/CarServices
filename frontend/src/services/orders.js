@@ -13,7 +13,7 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
             AsesorID: asesorId ? asesorId.toString() : "1"
         };
 
-        console.log(`[Frontend] Fetching/Creating Order ID directly on .173...`, payload);
+        console.log(`[Frontend] Fetching/Creating Order ID directly on .52...`, payload);
         // Call the remote backend directly
         const response = await api.post('/orden/crear', payload);
         const data = response.data;
@@ -36,13 +36,13 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
 };
 
 export const createOrder = async (orderData) => {
-    // Persist directly on .173
+    // Persist directly on .52
     const response = await api.post('/orden/crear', orderData);
     return response.data;
 };
 
 export const updateExternalOrder = async (payload) => {
-    console.log(`[Frontend] Updating External Order on .199...`, payload);
+    console.log(`[Frontend] Updating External Order on .52...`, payload);
     const response = await api.post('/orden/actualizar', payload);
     console.log(`[Frontend] External Update Response:`, response.data);
     return response.data;
@@ -76,7 +76,7 @@ export const getOrdersList = async (ordenId = null, sucursalId = null, ordenEsta
         if (sucursalId) payload.SucursalID = parseInt(sucursalId); // El backend prefiere int
         payload.OrdenEstatus = ordenEstatus;
 
-        console.log(`[Frontend] Fetching Orders List directly on .199... payload:`, payload);
+        console.log(`[Frontend] Fetching Orders List directly on .52... payload:`, payload);
         const response = await api.post('/orden/listar', payload);
         return response.data;
     } catch (error) {
@@ -86,7 +86,7 @@ export const getOrdersList = async (ordenId = null, sucursalId = null, ordenEsta
 };
 
 export const cancelOrder = async (orderId) => {
-    console.log(`[Frontend] Cancelling Order ${orderId} on .173...`);
+    console.log(`[Frontend] Cancelling Order ${orderId} on .52...`);
     const response = await api.post('/orden/cancelar', { OrdenID: orderId });
     console.log(`[Frontend] Cancel Response:`, response.data);
     return response.data;
@@ -97,7 +97,7 @@ export const saveOrderTotal = async (payload, fotosDict = {}) => {
      * Guarda la orden completa usando el nuevo endpoint consolidado /ingresos/nuevo.
      * Envía la data estructurada (JSON), la metadata de las fotos (JSON) y las fotos físicas en un multipart/form-data.
      */
-    console.log(`[Frontend] Saving Consolidated Order via multipart to .173 /ingresos/nuevo...`);
+    console.log(`[Frontend] Saving Consolidated Order via multipart to .52 /ingresos/nuevo...`);
 
     try {
         const formData = new FormData();
@@ -119,7 +119,14 @@ export const saveOrderTotal = async (payload, fotosDict = {}) => {
             if (uri && (uri.startsWith('file:') || uri.startsWith('blob:') || uri.startsWith('data:'))) {
                 // Generar nombre simulado o extraer de uri
                 let ext = uri.includes('data:image/png') || uri.endsWith('.png') ? 'png' : 'jpg';
-                if (key === 'firmaPrestador' || key === 'firmaCliente') ext = 'bmp';
+                let finalUri = uri;
+                let mimeType = `image/${ext}`;
+
+                if (key === 'firmaPrestador' || key === 'firmaCliente') {
+                    ext = 'bmp';
+                    mimeType = 'image/.bmp'; // Trick the backend parser into adding the dot
+                    finalUri = finalUri.replace('data:image/png', 'data:image/.bmp'); // For base64 fallbacks
+                }
 
                 const filename = `${key}_${Date.now()}.${ext}`;
                 const tipoEvidenciaID = photoLabels[key] || 99;
@@ -132,14 +139,14 @@ export const saveOrderTotal = async (payload, fotosDict = {}) => {
 
                 // Anexar el archivo físico
                 if (Platform.OS === 'web') {
-                    const fetchResponse = await fetch(uri);
+                    const fetchResponse = await fetch(finalUri);
                     const blob = await fetchResponse.blob();
                     formData.append('fotos', blob, filename);
                 } else {
                     formData.append('fotos', {
-                        uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+                        uri: Platform.OS === 'ios' ? finalUri.replace('file://', '') : finalUri,
                         name: filename,
-                        type: `image/${ext}`,
+                        type: mimeType,
                     });
                 }
             }

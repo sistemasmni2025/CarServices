@@ -201,7 +201,7 @@ const DashboardScreen = ({ navigation }) => {
                                 await AsyncStorage.removeItem(key);
                                 Alert.alert("Limpio", "El borrador local ha sido eliminado.");
                                 // Re-check backend immediately after clearing local
-                                checkPendingBackend(selectedBranch.id, userData.id);
+                                // checkPendingBackend(selectedBranch.id, userData.id);
                             }
                         }
                         return;
@@ -217,7 +217,7 @@ const DashboardScreen = ({ navigation }) => {
                                     await AsyncStorage.removeItem(key);
                                     Alert.alert("Limpio", "El borrador local ha sido eliminado.");
                                     // Revisa backend inmediatamente después de limpiar local
-                                    checkPendingBackend(selectedBranch.id, userData.id);
+                                    // checkPendingBackend(selectedBranch.id, userData.id);
                                 },
                                 style: "destructive"
                             },
@@ -237,7 +237,7 @@ const DashboardScreen = ({ navigation }) => {
 
             // 2. Revisar Backend si no hay local
             if (userData?.id && selectedBranch?.id) {
-                checkPendingBackend(selectedBranch.id, userData.id);
+                // checkPendingBackend(selectedBranch.id, userData.id);
             }
         };
 

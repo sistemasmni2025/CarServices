@@ -18,7 +18,7 @@ export const getClientById = async (id) => {
 export const searchClients = async (query) => {
     console.log(`[clients.js] native fetch starting for: ${query}`);
     try {
-        const response = await fetch(`http://172.16.71.173:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`http://51.79.17.52:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'
@@ -42,15 +42,48 @@ export const searchClients = async (query) => {
 // Backend Proxy for Client Sync
 export const syncClient = async (clientData) => {
     /**
-     * BYPASS: Sincroniza un cliente local con el Backend remoto.
-     * Obsoleto: El Mega-Payload en el Paso 5 ya envía todos los datos.
+     * Sincroniza el cliente seleccionado/creado con la base de datos MySQL local
+     * para que pueda ser referenciado en la creación de vehículos posteriores.
      */
     try {
-        console.log("[Sync] Bypassing Obsolete Backend Proxy (/clients/sync). Returning success immediately.", clientData);
-        // We bypass the external call since the endpoint is 404 and the Mega-Payload handles it
-        return { success: true, clienteidgen: clientData.clienteidgen || clientData.id || 0 };
+        const idGeneradoLocal = `C${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+
+        // El id Genexus es típicamente el campo 'id' principal si viene de SOAP, 
+        // o 'clienteidgen' si ya lo habíamos guardado. Aseguramos fallback.
+        const idgenexus = clientData.clienteidgen || clientData.id || 0;
+
+        const payload = {
+            ClienteClave: String(idgenexus !== 0 ? idgenexus : idGeneradoLocal),
+            ClienteNombre: clientData.nombre ? clientData.nombre.trim() : "SIN NOMBRE",
+            ClienteRazon: clientData.razon_social ? clientData.razon_social.trim() : (clientData.nombre ? clientData.nombre.trim() : "SIN NOMBRE"),
+            ClienteRegimen: clientData.regimen_fiscal || "616 - Sin obligaciones fiscales",
+            ClienteRFC: (clientData.rfc || "XAXX010101000").trim().toUpperCase().substring(0, 13),
+            ClienteDomicilio: clientData.domicilio ? clientData.domicilio.trim() : "Conocido",
+            ClienteDomicilio2: clientData.domicilio2 ? clientData.domicilio2.trim() : "",
+            ClienteCiudad: clientData.ciudad ? clientData.ciudad.trim() : "Celaya",
+            ClienteEstadoClave: clientData.estado ? clientData.estado.substring(0, 3).toUpperCase() : "GTO",
+            ClienteEstadoNombre: clientData.estado || "Guanajuato",
+            ClienteCP: clientData.cp ? clientData.cp.trim() : "38000",
+            ClienteCategoria: "1",
+            ClienteDiasCredito: 30,
+            // Agregamos el parámetro crítico solicitado
+            ClienteIDGen: String(idgenexus)
+        };
+
+        console.log("[Sync] Syncing client to MySQL (/clientes/crearmysql):", payload);
+        const response = await api.post('/clientes/crearmysql', payload);
+        console.log("[Sync] Success:", response.data);
+
+        return {
+            success: true,
+            clienteidgen: response.data?.ClienteIDGen || idgenexus,
+            localId: response.data?.ClienteID
+        };
     } catch (error) {
         console.error("Client sync failed:", error);
+        if (error.response) {
+            console.error("Sync error details:", error.response.data);
+        }
         throw error;
     }
 };
