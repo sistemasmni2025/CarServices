@@ -35,7 +35,7 @@ const BranchSelectionScreen = () => {
         try {
             await AsyncStorage.setItem('selected_branch', JSON.stringify(branch));
         } catch (e) {
-            console.log("Error saving branch", e);
+            // console.log("Error saving branch", e);
         }
 
         // All selections lead to Dashboard

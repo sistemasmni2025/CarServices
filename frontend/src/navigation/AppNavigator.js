@@ -41,7 +41,7 @@ const AppNavigatorWrapper = () => {
                 // Check if state is recent (e.g., less than 24 hours old)
                 // This prevents getting stuck in a loop from a very old session
                 if (parsed.timestamp && (now - parsed.timestamp < 24 * 60 * 60 * 1000)) {
-                    console.log("Found recent saved wizard state, redirecting...");
+                    // console.log("Found recent saved wizard state, redirecting...");
                     // We need to wait a tick for the navigator to be fully ready to handle the route
                     // setTimeout(() => {
                     //    navigationRef.current?.navigate('Wizard');
@@ -52,7 +52,7 @@ const AppNavigatorWrapper = () => {
                 }
             }
         } catch (e) {
-            console.log("Error checking wizard state", e);
+            // console.log("Error checking wizard state", e);
         }
     };
 

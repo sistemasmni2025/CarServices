@@ -342,7 +342,7 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
                                 // Fallback just in case
                             }
                         } catch (err) {
-                            console.error("Failed to fetch asesores", err);
+                            // console.error("Failed to fetch asesores", err);
                         } finally {
                             setLoadingAsesores(false);
                         }
@@ -396,7 +396,7 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
                     }
                 }
             } catch (err) {
-                console.log("Error calculating min time", err);
+                // console.log("Error calculating min time", err);
             }
         }
     }

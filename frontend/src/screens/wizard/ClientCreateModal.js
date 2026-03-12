@@ -122,9 +122,9 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
                 ClienteEmail: formData.email ? formData.email.trim() : ""
             };
 
-            console.log("[ClientCreateModal] Payload a enviar:", payloadPostman);
+            // console.log("[ClientCreateModal] Payload a enviar:", payloadPostman);
             const responseBackend = await createClient(payloadPostman);
-            console.log("[ClientCreateModal] Respuesta de creacion:", responseBackend);
+            // console.log("[ClientCreateModal] Respuesta de creacion:", responseBackend);
             
             // Construimos el objeto cliente como lo espera el flujo del Wizard (ClientSearchScreen.js)
             const newClientUI = {
@@ -153,9 +153,9 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
             onClose();
 
         } catch (error) {
-            console.error("Error creating client:", error);
+            // console.error("Error creating client:", error);
             if (error.response) {
-                console.error("Backend validation details:", error.response.data);
+                // console.error("Backend validation details:", error.response.data);
             }
             Alert.alert("Error", "No se pudo crear el cliente. Verifica que el RFC no esté duplicado o que los datos sean correctos.");
         } finally {

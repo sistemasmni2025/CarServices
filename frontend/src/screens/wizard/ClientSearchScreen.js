@@ -44,24 +44,24 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
             if (searchQuery.trim().length > 2) {
                 setIsLoading(true);
                 try {
-                    console.log(`[ClientSearchScreen] Searching SOAP endpoint for: "${searchQuery}"`);
+                    // console.log(`[ClientSearchScreen] Searching SOAP endpoint for: "${searchQuery}"`);
                     const results = await searchClients(searchQuery);
-                    console.log(`[ClientSearchScreen] Raw results:`, results);
+                    // console.log(`[ClientSearchScreen] Raw results:`, results);
 
                     if (Array.isArray(results)) {
-                        console.log(`[ClientSearchScreen] Found ${results.length} items (Array format)`);
+                        // console.log(`[ClientSearchScreen] Found ${results.length} items (Array format)`);
                         setFilteredClients(results);
                     } else if (results && typeof results === 'object') {
-                        console.log(`[ClientSearchScreen] Found 1 item (Object format)`);
+                        // console.log(`[ClientSearchScreen] Found 1 item (Object format)`);
                         setFilteredClients([results]);
                     } else {
-                        console.log(`[ClientSearchScreen] Unrecognized format or empty array`);
+                        // console.log(`[ClientSearchScreen] Unrecognized format or empty array`);
                         setFilteredClients([]);
                     }
                 } catch (error) {
-                    console.error("[ClientSearchScreen] Search Error:", error);
+                    // console.error("[ClientSearchScreen] Search Error:", error);
                     if (error.response) {
-                        console.error("[ClientSearchScreen] Error Details:", error.response.data);
+                        // console.error("[ClientSearchScreen] Error Details:", error.response.data);
                     }
                     setFilteredClients([]);
                 } finally {
@@ -76,15 +76,23 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
     }, [searchQuery]);
 
     const handleSelectClient = (client) => {
+        Keyboard.dismiss();
         setSelectedClient(client);
-        setIsConfirmModalVisible(true);
+        // Deferred to prevent "Blocked aria-hidden" React Native Web bug
+        setTimeout(() => setIsConfirmModalVisible(true), 50);
     };
 
     const handleClientCreated = (newClient) => {
+        Keyboard.dismiss();
         setClients([...clients, newClient]);
         setIsModalVisible(false); // Close create modal
         setSelectedClient(newClient); // Select new client
-        setIsConfirmModalVisible(true); // Open confirm modal
+        setTimeout(() => setIsConfirmModalVisible(true), 50); // Open confirm modal safely
+    };
+
+    const openCreateModal = () => {
+        Keyboard.dismiss();
+        setTimeout(() => setIsModalVisible(true), 50);
     };
 
     return (
@@ -141,7 +149,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                             </View>
                             <TouchableOpacity
                                 style={styles.compactAddButton}
-                                onPress={() => setIsModalVisible(true)}
+                                onPress={openCreateModal}
                             >
                                 <MaterialCommunityIcons name="plus" size={20} color="#fff" />
                             </TouchableOpacity>
@@ -258,7 +266,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                     try {
                                         // Sync with external API (172.16...), receive ID
                                         const syncResponse = await syncClient(selectedClient);
-                                        console.log("Client Sync Response:", syncResponse);
+                                        // console.log("Client Sync Response:", syncResponse);
 
                                         if (syncResponse && syncResponse.success) {
                                             const updatedClient = {
@@ -284,7 +292,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                         }
 
                                         Alert.alert("Error de Conexión", `Falló la validación: ${errorMessage}`);
-                                        console.log("Sync Error", err);
+                                        // console.log("Sync Error", err);
                                     } finally {
                                         setIsLoading(false);
                                     }

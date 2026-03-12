@@ -96,7 +96,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
     };
 
     const [wizardData, setWizardData] = useState(initialWizardData);
-    console.log(`[Wizard] UserData:`, userData);
+    // console.log(`[Wizard] UserData:`, userData);
 
 
     const [isLoaded, setIsLoaded] = useState(false);
@@ -136,7 +136,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                                 setWizardData(parsed.data);
                                 setCurrentStepId(parsed.step);
                                 setIsLoaded(true);
-                                console.log("[Wizard] State restored automatically (Web Mode)");
+                                // console.log("[Wizard] State restored automatically (Web Mode)");
                             }
                             return;
                         }
@@ -162,7 +162,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                                         setWizardData(parsed.data);
                                         setCurrentStepId(parsed.step);
                                         setIsLoaded(true);
-                                        console.log("Wizard state restored");
+                                        // console.log("Wizard state restored");
                                     }
                                 }
                             ],
@@ -172,7 +172,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     }
                 }
             } catch (error) {
-                console.log("Failed to load wizard state", error);
+                // console.log("Failed to load wizard state", error);
             } finally {
                 // Si llegamos aquí (no hay savedState o hubo error), cargamos limpio.
                 setIsLoaded(true);
@@ -199,7 +199,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
                 // console.log(`[Persistence] Saved to ${STORAGE_KEY} (Debounced)`);
             } catch (error) {
-                console.error("Failed to save wizard state", error);
+                // console.error("Failed to save wizard state", error);
             }
         }, 500);
 
@@ -227,7 +227,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 const newClientId = newData?.id;
 
                 if (oldClientId !== newClientId) {
-                    console.log("Client changed, resetting vehicle selection");
+                    // console.log("Client changed, resetting vehicle selection");
                     newState.vehiculo = { ...initialWizardData.vehiculo };
                 }
             }
@@ -250,7 +250,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
     const handleFinish = async (finalData = null) => {
         // Usa finalData si se provee (SummaryScreen envía wizardData + firma)
         const currentData = finalData || wizardData;
-        console.log('[Wizard] Starting Consolidated Order Submission...', currentData);
+        // console.log('[Wizard] Starting Consolidated Order Submission...', currentData);
         setUploading(true);
 
         try {
@@ -270,7 +270,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                         await FileSystem.writeAsStringAsync(firmaPrestadorUri, base64Data, { encoding: 'base64' });
                     }
                 } catch (sigErr) {
-                    console.error("Error saving provider signature:", sigErr);
+                    // console.error("Error saving provider signature:", sigErr);
                 }
             }
 
@@ -285,7 +285,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                         await FileSystem.writeAsStringAsync(firmaClienteUri, base64Data, { encoding: 'base64' });
                     }
                 } catch (sigErr) {
-                    console.error("Error saving consumer signature:", sigErr);
+                    // console.error("Error saving consumer signature:", sigErr);
                 }
             }
 
@@ -294,7 +294,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
             if (firmaPrestadorUri) fotosDict['firmaPrestador'] = firmaPrestadorUri;
             if (firmaClienteUri) fotosDict['firmaCliente'] = firmaClienteUri;
 
-            console.log("[Wizard] Bypassing individual photo uploads to /evidencias/nueva (Server returns 422). Photos will be handled if backend configures mega-payload support or another route.");
+            // console.log("[Wizard] Bypassing individual photo uploads to /evidencias/nueva (Server returns 422). Photos will be handled if backend configures mega-payload support or another route.");
 
             // Ya no enviamos evidencia pesada en el MegaPayload para prevenir el error 1406
             // Las fotos se enviarán individualmente a /evidencias/nueva una vez que tengamos el OrdenID real
@@ -367,9 +367,9 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 }]
             };
 
-            console.log("[Wizard] Sending Multipart Mega-Payload...");
+            // console.log("[Wizard] Sending Multipart Mega-Payload...");
             const result = await saveOrderTotal(megaPayload, fotosDict);
-            console.log("[Wizard] Save Result:", result);
+            // console.log("[Wizard] Save Result:", result);
 
             if (result && (result.success !== false)) {
                 // Trazar el resultado dual (REST + SOAP)
@@ -407,7 +407,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
             }
 
         } catch (error) {
-            console.error("Error in unified finish flow:", error);
+            // console.error("Error in unified finish flow:", error);
             if (Platform.OS === 'web') {
                 window.alert(`No se pudo guardar la orden: ${error.message}`);
             } else {

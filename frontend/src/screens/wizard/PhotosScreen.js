@@ -51,6 +51,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
     const [uploading, setUploading] = useState(false);
     const [uploadStatus, setUploadStatus] = useState(null); // 'success', 'error', null
     const [uploadedKeys, setUploadedKeys] = useState(new Set()); // Track uploaded photos
+    const [capturingKey, setCapturingKey] = useState(null); // Track which photo is being taken to lock UI
 
     const photoLabels = {
         frontal: 'EXTFRON',
@@ -99,7 +100,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
             );
             return manipResult.uri;
         } catch (error) {
-            console.log("Error processing image (returning original):", error);
+            // console.log("Error processing image (returning original):", error);
             return uri; // CRITICAL: Fallback to original if manipulation fails to avoid data loss
         }
     };
@@ -125,7 +126,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
 
         try {
             const uploadPromises = photosToUpload.map(async ([key, uri]) => {
-                console.log(`Uploading ${key} for Order ${orderId}...`);
+                // console.log(`Uploading ${key} for Order ${orderId}...`);
                 const label = photoLabels[key] || "Foto General";
                 const url = await uploadPhoto(uri, label, orderId);
                 if (url) {
@@ -152,7 +153,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
             }, 2000);
 
         } catch (error) {
-            console.error("Error uploading photos:", error);
+            // console.error("Error uploading photos:", error);
             setUploadStatus('error');
             setUploading(false);
             // Error stays visible until user dismisses or retries
@@ -168,7 +169,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
                     const key = await AsyncStorage.getItem('PENDING_PHOTO_KEY');
                     if (key) {
                         const originalUri = pendingResult.assets[0].uri;
-                        console.log(`Restoring photo for ${key}:`, originalUri);
+                        // console.log(`Restoring photo for ${key}:`, originalUri);
 
                         // Process before saving to state
                         const processedUri = await processImage(originalUri);
@@ -180,17 +181,20 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
                     }
                 }
             } catch (e) {
-                console.log("Error restoring pending result:", e);
+                // console.log("Error restoring pending result:", e);
             }
         })();
     }, []);
 
     const handleCapture = async (key) => {
+        if (capturingKey) return; // Prevent double taps causing freeze
+        setCapturingKey(key);
         try {
             const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
             if (status !== 'granted') {
                 alert('Se necesita permiso para usar la cámara');
+                setCapturingKey(null);
                 return;
             }
 
@@ -205,7 +209,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const originalUri = result.assets[0].uri;
-                console.log(`Photo captured for ${key}:`, originalUri);
+                // console.log(`Photo captured for ${key}:`, originalUri);
 
                 // Process before saving to state
                 const processedUri = await processImage(originalUri);
@@ -215,8 +219,10 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
                 onUpdate(newPhotos);
             }
         } catch (error) {
-            console.error("Error launching camera:", error);
-            alert('Error al abrir la cámara');
+            // console.error("Error launching camera:", error);
+            alert('Error al abrir o procesar la cámara');
+        } finally {
+            setCapturingKey(null); // Unlock UI
         }
     };
 
@@ -322,24 +328,32 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
                 {activeTab === 'otros' && renderOtros()}
 
                 <View style={styles.footer}>
-                    {/* Upload Status Modal */}
-                    <Modal visible={uploading} transparent={true} animationType="fade">
+                    {/* Upload Status & Camera Loading Modal */}
+                    <Modal visible={uploading || !!capturingKey} transparent={true} animationType="fade">
                         <View style={styles.modalOverlay}>
                             <View style={styles.modalContent}>
-                                {uploadStatus === 'success' ? (
-                                    <>
-                                        <MaterialCommunityIcons name="check-circle" size={48} color="#28a745" />
-                                        <Text style={styles.modalText}>¡Fotos Guardadas!</Text>
-                                    </>
-                                ) : uploadStatus === 'error' ? (
-                                    <>
-                                        <MaterialCommunityIcons name="alert-circle" size={48} color="#dc3545" />
-                                        <Text style={styles.modalText}>Error</Text>
-                                    </>
+                                {uploading ? (
+                                    uploadStatus === 'success' ? (
+                                        <>
+                                            <MaterialCommunityIcons name="check-circle" size={48} color="#28a745" />
+                                            <Text style={styles.modalText}>¡Fotos Guardadas!</Text>
+                                        </>
+                                    ) : uploadStatus === 'error' ? (
+                                        <>
+                                            <MaterialCommunityIcons name="alert-circle" size={48} color="#dc3545" />
+                                            <Text style={styles.modalText}>Error</Text>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ActivityIndicator size="large" color="#007bff" />
+                                            <Text style={styles.modalText}>Procesando...</Text>
+                                        </>
+                                    )
                                 ) : (
                                     <>
                                         <ActivityIndicator size="large" color="#007bff" />
-                                        <Text style={styles.modalText}>Procesando...</Text>
+                                        <Text style={styles.modalText}>Abriendo Cámara...</Text>
+                                        <Text style={{fontSize:11, color:'#666', marginTop:5}}>Por favor espere</Text>
                                     </>
                                 )}
                             </View>

@@ -41,9 +41,9 @@ const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
                 ClienteIDGen: client?.clienteidgen ? String(client.clienteidgen) : "0"
             };
 
-            console.log("[VehicleCreateModal] Payload a enviar:", payloadPostman);
+            // console.log("[VehicleCreateModal] Payload a enviar:", payloadPostman);
             const responseBackend = await createVehicle(payloadPostman);
-            console.log("[VehicleCreateModal] Respuesta de creacion:", responseBackend);
+            // console.log("[VehicleCreateModal] Respuesta de creacion:", responseBackend);
             
             // Construimos el objeto vehículo como lo espera el flujo del Wizard (VehicleWorkflowScreen.js)
             const newVehicleUI = {
@@ -66,9 +66,9 @@ const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
             onClose();
 
         } catch (error) {
-            console.error("Error creating vehicle:", error);
+            // console.error("Error creating vehicle:", error);
             if (error.response) {
-                console.error("Backend validation details:", error.response.data);
+                // console.error("Backend validation details:", error.response.data);
             }
             Alert.alert("Error", "No se pudo crear el vehículo. Verifica que las placas no estén duplicadas o que los datos sean correctos.");
         } finally {

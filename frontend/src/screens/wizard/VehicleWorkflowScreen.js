@@ -38,13 +38,13 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
             if (client) {
                 // Priorizar ID SOAP (clienteidgen) sobre ID local
                 const soapId = client.clienteidgen || client.id;
-                console.log("Searching vehicles for SOAP ID:", soapId);
+                // console.log("Searching vehicles for SOAP ID:", soapId);
 
                 setLoading(true);
                 if (soapId && soapId !== '0') {
                     try {
                         const found = await searchVehiclesSoap(soapId);
-                        console.log("Vehicles found:", found);
+                        // console.log("Vehicles found:", found);
                         if (found && found.length > 0) {
                             setVehicles(found);
                         } else {
@@ -52,7 +52,7 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
                         }
                         if (!data.details?.tag) setStep(0); // Solo resetear si no hay vehículo seleccionado
                     } catch (e) {
-                        console.error("Error searching vehicles:", e);
+                        // console.error("Error searching vehicles:", e);
                         setVehicles([]);
                         if (!data.details?.tag) setStep(0);
                     } finally {
@@ -133,7 +133,7 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
         const detailsToRegister = currentDetails || data.details;
 
         if (detailsToRegister && !detailsToRegister.id) {
-            console.log("Bypassing intermediate vehicle registration. Saving to local state directly (ID 0)...", detailsToRegister);
+            // console.log("Bypassing intermediate vehicle registration. Saving to local state directly (ID 0)...", detailsToRegister);
             // Bypass registerVehicleSoap since the server returns 404 and the Mega-Payload handles it later
             const updatedDetails = { ...detailsToRegister, id: 0 };
             onUpdate({ ...data, details: updatedDetails });

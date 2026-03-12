@@ -30,7 +30,7 @@ export const searchVehiclesSoap = async (clientId) => {
         }
         return [];
     } catch (error) {
-        console.warn("Vehicles Search Failed on .52", error);
+        // console.warn("Vehicles Search Failed on .52", error);
         return [];
     }
 };

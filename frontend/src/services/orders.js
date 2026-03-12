@@ -13,11 +13,11 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
             AsesorID: asesorId ? asesorId.toString() : "1"
         };
 
-        console.log(`[Frontend] Fetching/Creating Order ID directly on .52...`, payload);
+        // console.log(`[Frontend] Fetching/Creating Order ID directly on .52...`, payload);
         // Call the remote backend directly
         const response = await api.post('/orden/crear', payload);
         const data = response.data;
-        console.log(`[Frontend] Order ID Response:`, data);
+        // console.log(`[Frontend] Order ID Response:`, data);
 
         // Structure from user: { "OrdenID": 236, "OrdenExistente": false, "OrdenSerie": null, "OrdenDetalle": null }
         return {
@@ -30,7 +30,7 @@ export const getNextOrderId = async (sucursalId, usuarioId, asesorId) => {
 
     } catch (error) {
         const detail = error.response?.data?.detail || error.message;
-        console.error("Error fetching/creating Order:", detail);
+        // console.error("Error fetching/creating Order:", detail);
         throw new Error(detail);
     }
 };
@@ -42,9 +42,9 @@ export const createOrder = async (orderData) => {
 };
 
 export const updateExternalOrder = async (payload) => {
-    console.log(`[Frontend] Updating External Order on .52...`, payload);
+    // console.log(`[Frontend] Updating External Order on .52...`, payload);
     const response = await api.post('/orden/actualizar', payload);
-    console.log(`[Frontend] External Update Response:`, response.data);
+    // console.log(`[Frontend] External Update Response:`, response.data);
     return response.data;
 };
 
@@ -76,19 +76,19 @@ export const getOrdersList = async (ordenId = null, sucursalId = null, ordenEsta
         if (sucursalId) payload.SucursalID = parseInt(sucursalId); // El backend prefiere int
         payload.OrdenEstatus = ordenEstatus;
 
-        console.log(`[Frontend] Fetching Orders List directly on .52... payload:`, payload);
+        // console.log(`[Frontend] Fetching Orders List directly on .52... payload:`, payload);
         const response = await api.post('/orden/listar', payload);
         return response.data;
     } catch (error) {
-        console.error("Error fetching orders list:", error.message);
+        // console.error("Error fetching orders list:", error.message);
         throw error;
     }
 };
 
 export const cancelOrder = async (orderId) => {
-    console.log(`[Frontend] Cancelling Order ${orderId} on .52...`);
+    // console.log(`[Frontend] Cancelling Order ${orderId} on .52...`);
     const response = await api.post('/orden/cancelar', { OrdenID: orderId });
-    console.log(`[Frontend] Cancel Response:`, response.data);
+    // console.log(`[Frontend] Cancel Response:`, response.data);
     return response.data;
 };
 
@@ -97,7 +97,7 @@ export const saveOrderTotal = async (payload, fotosDict = {}) => {
      * Guarda la orden completa usando el nuevo endpoint consolidado /ingresos/nuevo.
      * Envía la data estructurada (JSON), la metadata de las fotos (JSON) y las fotos físicas en un multipart/form-data.
      */
-    console.log(`[Frontend] Saving Consolidated Order via multipart to .52 /ingresos/nuevo...`);
+    // console.log(`[Frontend] Saving Consolidated Order via multipart to .52 /ingresos/nuevo...`);
 
     try {
         const formData = new FormData();
@@ -167,7 +167,7 @@ export const saveOrderTotal = async (payload, fotosDict = {}) => {
 
         return response.data;
     } catch (error) {
-        console.error("Error Saving Order Multipart:", error.response?.data || error.message);
+        // console.error("Error Saving Order Multipart:", error.response?.data || error.message);
         throw error;
     }
 };

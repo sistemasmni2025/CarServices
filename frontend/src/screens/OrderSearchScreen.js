@@ -28,7 +28,7 @@ const OrderSearchScreen = ({ navigation }) => {
     const fetchOrders = async () => {
         setIsLoadingList(true);
         const branchId = selectedBranch?.id || selectedBranch?.SucursalID;
-        console.log(`[OrderSearchScreen] Fetching filtered orders from backend. Status: ${selectedStatus}, Branch: ${branchId}`);
+        // console.log(`[OrderSearchScreen] Fetching filtered orders from backend. Status: ${selectedStatus}, Branch: ${branchId}`);
 
         try {
             // El backend ahora soporta y requiere SucursalID y OrdenEstatus nativamente.
@@ -51,7 +51,7 @@ const OrderSearchScreen = ({ navigation }) => {
                 }
             }
 
-            console.log(`[OrderSearchScreen] Orders returned from backend: ${normalizedData.length}`);
+            // console.log(`[OrderSearchScreen] Orders returned from backend: ${normalizedData.length}`);
 
             // Fix field mapping based on backend short model
             const properlyMapped = normalizedData.map(item => ({
@@ -66,7 +66,7 @@ const OrderSearchScreen = ({ navigation }) => {
             setOrdersList(properlyMapped.reverse());
 
         } catch (error) {
-            console.error("Error cargando lista de órdenes:", error);
+            // console.error("Error cargando lista de órdenes:", error);
             setOrdersList([]);
         } finally {
             setIsLoadingList(false);

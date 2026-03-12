@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
                 await AsyncStorage.setItem('user_data', JSON.stringify(user));
             }
         } catch (e) {
-            console.log(e);
+            // console.log(e);
             throw e;
         } finally {
             setIsLoading(false);
@@ -83,17 +83,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     const isLoggedIn = async () => {
-        console.log("[AuthContext] Checking if logged in...");
+        // console.log("[AuthContext] Checking if logged in...");
         try {
-            console.log("[AuthContext] Fetching token...");
+            // console.log("[AuthContext] Fetching token...");
             let token = await AsyncStorage.getItem('user_token');
-            console.log("[AuthContext] Fetching name...");
+            // console.log("[AuthContext] Fetching name...");
             let name = await AsyncStorage.getItem('user_name');
-            console.log("[AuthContext] Fetching data...");
+            // console.log("[AuthContext] Fetching data...");
             let data = await AsyncStorage.getItem('user_data');
-            console.log("[AuthContext] Fetching branch...");
+            // console.log("[AuthContext] Fetching branch...");
             let branch = await AsyncStorage.getItem('selected_branch');
-            console.log("[AuthContext] Fetching timestamp...");
+            // console.log("[AuthContext] Fetching timestamp...");
             let timestamp = await AsyncStorage.getItem('login_timestamp');
 
             // Validación de caducidad de sesión (23 horas)
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
             const twentyThreeHoursMs = 23 * 60 * 60 * 1000;
 
             if (timestamp && (now - parseInt(timestamp) > twentyThreeHoursMs)) {
-                console.log("Sesión web expirada (> 23h). Cerrando sesión.");
+                // console.log("Sesión web expirada (> 23h). Cerrando sesión.");
                 await logout();
                 return;
             }
@@ -128,19 +128,19 @@ export const AuthProvider = ({ children }) => {
                 };
                 setSelectedBranch(normalizedBranch);
             }
-            console.log("[AuthContext] Done. isLoading -> false");
+            // console.log("[AuthContext] Done. isLoading -> false");
         } catch (e) {
-            console.log("[AuthContext] Restoring session failed:", e);
+            // console.log("[AuthContext] Restoring session failed:", e);
         } finally {
             setIsLoading(false);
-            console.log("[AuthContext] isLoading set to false (finally)");
+            // console.log("[AuthContext] isLoading set to false (finally)");
         }
     };
 
     useEffect(() => {
         const timeout = setTimeout(() => {
             if (isLoading) {
-                console.log("[AuthContext] Safety timeout reached, forcing isLoading to false");
+                // console.log("[AuthContext] Safety timeout reached, forcing isLoading to false");
                 setIsLoading(false);
             }
         }, 5000);

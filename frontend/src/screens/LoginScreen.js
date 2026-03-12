@@ -23,7 +23,7 @@ const LoginScreen = ({ navigation }) => {
         try {
             await login(trimmedUsername, password);
         } catch (error) {
-            console.error(error);
+            // console.error(error);
             let errorMessage = 'Usuario o contraseña incorrectos';
 
             if (error.message && error.message.includes('Sucursal')) {

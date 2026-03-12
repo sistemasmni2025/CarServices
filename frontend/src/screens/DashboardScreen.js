@@ -79,7 +79,7 @@ const DashboardScreen = ({ navigation }) => {
                                     const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
                                     await AsyncStorage.removeItem(key);
                                 } catch (e) {
-                                    console.log(e);
+                                    // console.log(e);
                                     Alert.alert("Error", "No se pudo cancelar la orden en el servidor.");
                                 }
                             }
@@ -101,7 +101,7 @@ const DashboardScreen = ({ navigation }) => {
                                         const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
                                         await AsyncStorage.removeItem(key);
                                     } catch (e) {
-                                        console.log(e);
+                                        // console.log(e);
                                         Alert.alert("Error", "No se pudo cancelar la orden en el servidor.");
                                     }
                                 },
@@ -232,7 +232,7 @@ const DashboardScreen = ({ navigation }) => {
                     return;
                 }
             } catch (e) {
-                console.log("Error checking local draft", e);
+                // console.log("Error checking local draft", e);
             }
 
             // 2. Revisar Backend si no hay local

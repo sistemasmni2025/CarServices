@@ -104,7 +104,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                 setInspectionData(response.tiposValoracion);
             }
         } catch (error) {
-            console.error("Failed to load inspection checklist:", error);
+            // console.error("Failed to load inspection checklist:", error);
             // Fallback or alert?
         } finally {
             setLoadingInspection(false);

@@ -23,7 +23,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
             const details = await getOrdersList(ordenId);
             setOrderDetails(details);
         } catch (error) {
-            console.error("Error al traer detalles de la orden en nueva pantalla:", error);
+            // console.error("Error al traer detalles de la orden en nueva pantalla:", error);
             setOrderDetails({ error: "No se pudo cargar el detalle. Por favor reintente." });
         } finally {
             setIsLoading(false);

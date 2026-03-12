@@ -5,11 +5,11 @@ export const getAsesores = async () => {
      * Obtiene la lista de asesores desde el Backend.
      */
     try {
-        console.log(`[Frontend] Fetching asesores directly on .52...`);
+        // console.log(`[Frontend] Fetching asesores directly on .52...`);
         const response = await api.get('/asesores/');
         return response.data;
     } catch (error) {
-        console.error("Error fetching asesores:", error.message);
+        // console.error("Error fetching asesores:", error.message);
         throw error;
     }
 };

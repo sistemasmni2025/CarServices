@@ -24,11 +24,11 @@ const optimizeImage = async (uri) => {
             }
         );
 
-        console.log("[PhotoService] Imagen optimizada:", result);
+        // console.log("[PhotoService] Imagen optimizada:", result);
         return result.uri;
 
     } catch (e) {
-        console.log("[PhotoService] Error optimizando imagen:", e);
+        // console.log("[PhotoService] Error optimizando imagen:", e);
         return uri; // fallback: usar original
     }
 };
@@ -56,7 +56,7 @@ export const uploadPhoto = async (photoUri, token, orderId, type = "1") => {
         formData.append('orden_id', orderId);
         formData.append('tipoevidenciaclave', type);
 
-        console.log(`[PhotoService] Uploading ${filename} to ${UPLOAD_URL}...`);
+        // console.log(`[PhotoService] Uploading ${filename} to ${UPLOAD_URL}...`);
 
         const response = await fetch(UPLOAD_URL, {
             method: 'POST',
@@ -68,16 +68,16 @@ export const uploadPhoto = async (photoUri, token, orderId, type = "1") => {
         });
 
         const result = await response.json();
-        console.log('[PhotoService] Upload Result:', result);
+        // console.log('[PhotoService] Upload Result:', result);
 
         if (response.ok) {
             return result.url || result.path || true;
         } else {
-            console.error('[PhotoService] Upload failed:', result);
+            // console.error('[PhotoService] Upload failed:', result);
             return null;
         }
     } catch (error) {
-        console.error('[PhotoService] Network Error:', error);
+        // console.error('[PhotoService] Network Error:', error);
         return null;
     }
 };
@@ -111,7 +111,7 @@ export const getImageBase64 = async (uri) => {
         });
         return base64;
     } catch (error) {
-        console.error("[PhotoService] Error converting to Base64:", error);
+        // console.error("[PhotoService] Error converting to Base64:", error);
         return null;
     }
 };

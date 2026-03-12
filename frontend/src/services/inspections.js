@@ -34,7 +34,7 @@ export const getInspectionChecklist = async () => {
         const response = await api.post('/valoraciones/listar', {});
         return response.data;
     } catch (error) {
-        console.error("Error fetching inspection checklist:", error);
+        // console.error("Error fetching inspection checklist:", error);
         throw error;
     }
 };
@@ -46,7 +46,7 @@ export const saveInspections = async (inspections) => {
         const response = await api.post('http://51.79.17.52:8000/api/inspeccion/guardar', inspections);
         return response.data;
     } catch (error) {
-        console.error("Error saving inspections:", error);
+        // console.error("Error saving inspections:", error);
         throw error;
     }
 };

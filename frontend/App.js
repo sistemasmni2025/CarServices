@@ -1,9 +1,21 @@
 import React from 'react';
-console.log("Loading App.js...");
+
+// GLOBAL CONSOLE OVERRIDE
+// Disables all logging to prevent Android memory buffer overflow and crashing
+if (!__DEV__ || true) { // Enforces silence even in local dev mode as requested
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  console.info = () => {};
+}
+
+// console.log("Loading App.js..."); (Removed to honor silence)
 import AppNavigator from './src/navigation/AppNavigator';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, Text } from 'react-native';
+import { View, Text, LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs(true); // Completely disables the on-screen and background log buffering
 import { AuthProvider } from './src/context/AuthContext';
 
 class ErrorBoundary extends React.Component {
