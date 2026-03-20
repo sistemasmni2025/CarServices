@@ -38,42 +38,32 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
         }
     }, [data]);
 
-    // Búsqueda con Debounce
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(async () => {
-            if (searchQuery.trim().length > 2) {
-                setIsLoading(true);
-                try {
-                    // console.log(`[ClientSearchScreen] Searching SOAP endpoint for: "${searchQuery}"`);
-                    const results = await searchClients(searchQuery);
-                    // console.log(`[ClientSearchScreen] Raw results:`, results);
-
-                    if (Array.isArray(results)) {
-                        // console.log(`[ClientSearchScreen] Found ${results.length} items (Array format)`);
-                        setFilteredClients(results);
-                    } else if (results && typeof results === 'object') {
-                        // console.log(`[ClientSearchScreen] Found 1 item (Object format)`);
-                        setFilteredClients([results]);
-                    } else {
-                        // console.log(`[ClientSearchScreen] Unrecognized format or empty array`);
-                        setFilteredClients([]);
-                    }
-                } catch (error) {
-                    // console.error("[ClientSearchScreen] Search Error:", error);
-                    if (error.response) {
-                        // console.error("[ClientSearchScreen] Error Details:", error.response.data);
-                    }
+    // Búsqueda Manual
+    const handleSearch = async () => {
+        Keyboard.dismiss();
+        if (searchQuery.trim().length > 2) {
+            setIsLoading(true);
+            try {
+                const results = await searchClients(searchQuery);
+                if (Array.isArray(results)) {
+                    setFilteredClients(results);
+                } else if (results && typeof results === 'object') {
+                    setFilteredClients([results]);
+                } else {
                     setFilteredClients([]);
-                } finally {
-                    setIsLoading(false);
                 }
-            } else {
+            } catch (error) {
                 setFilteredClients([]);
+            } finally {
+                setIsLoading(false);
             }
-        }, 500);
-
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+        } else {
+            setFilteredClients([]);
+            if (searchQuery.trim().length > 0) {
+                Alert.alert("Aviso", "Por favor ingrese al menos 3 caracteres para efectuar la búsqueda.");
+            }
+        }
+    };
 
     const handleSelectClient = (client) => {
         Keyboard.dismiss();
@@ -142,11 +132,22 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                 <MaterialCommunityIcons name="account-search" size={20} color="#666" style={styles.searchIcon} />
                                 <TextInput
                                     style={styles.searchInput}
-                                    placeholder="Buscar cliente..."
+                                    placeholder="Buscar por placa, nombre o clave..."
                                     value={searchQuery}
                                     onChangeText={setSearchQuery}
+                                    onSubmitEditing={handleSearch}
                                 />
                             </View>
+                            <TouchableOpacity
+                                style={styles.searchButton}
+                                onPress={handleSearch}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <MaterialCommunityIcons name="magnify" size={20} color="#fff" />
+                                )}
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.compactAddButton}
                                 onPress={openCreateModal}
@@ -376,11 +377,20 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#333',
     },
+    searchButton: {
+        backgroundColor: '#007bff',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 2,
+    },
     compactAddButton: {
         backgroundColor: '#4CAF50',
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 2,

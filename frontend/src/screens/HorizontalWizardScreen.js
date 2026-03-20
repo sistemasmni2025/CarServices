@@ -307,7 +307,11 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     InspeccionID: null,
                     OrdenID: 0,
                     ValoracionID: parseInt(id),
-                    InspeccionValor: (typeof itemData === 'object' ? !!itemData.checked : !!itemData) ? 1 : 0
+                    InspeccionValor: (typeof itemData === 'object' ? !!itemData.checked : !!itemData) ? 1 : 0,
+                    InspeccionDescripcion: typeof itemData === 'object' ? (itemData.observacion || "") : "",
+                    InspeccionObservacion: typeof itemData === 'object' ? (itemData.observacion || "") : "",
+                    descripcion: typeof itemData === 'object' ? (itemData.observacion || "") : "",
+                    observacion: typeof itemData === 'object' ? (itemData.observacion || "") : ""
                 }));
 
             // 4. CONSTRUIR MEGA-PAYLOAD (Alineado estrictamente con el formato del backend)

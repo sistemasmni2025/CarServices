@@ -18,7 +18,7 @@ export const getClientById = async (id) => {
 export const searchClients = async (query) => {
     // console.log(`[clients.js] native fetch starting for: ${query}`);
     try {
-        const response = await fetch(`http://51.79.17.52:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`http://172.16.71.199:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'
@@ -70,8 +70,8 @@ export const syncClient = async (clientData) => {
             ClienteIDGen: String(idgenexus)
         };
 
-        // console.log("[Sync] Syncing client to MySQL (/clientes/crearmysql):", payload);
-        const response = await api.post('/clientes/crearmysql', payload);
+        // console.log("[Sync] Syncing client to MySQL (/clientes/crear):", payload);
+        const response = await api.post('/clientes/crear', payload);
         // console.log("[Sync] Success:", response.data);
 
         return {

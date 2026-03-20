@@ -102,6 +102,32 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
             const response = await getInspectionChecklist();
             if (response && response.success && response.tiposValoracion) {
                 setInspectionData(response.tiposValoracion);
+                
+                setFormData(prev => {
+                    const currentInventory = prev.inventory || {};
+                    let newInventory = { ...currentInventory };
+                    let changed = false;
+                    
+                    response.tiposValoracion.forEach(tipo => {
+                        tipo.Valoraciones.forEach(item => {
+                            if (newInventory[item.ValoracionID] === undefined) {
+                                newInventory[item.ValoracionID] = {
+                                    checked: true,
+                                    descripcion: item.ValoracionDescripcion,
+                                    observacion: ''
+                                };
+                                changed = true;
+                            }
+                        });
+                    });
+                    
+                    if (changed) {
+                        const newForm = { ...prev, inventory: newInventory };
+                        setTimeout(() => onUpdate(newForm), 0);
+                        return newForm;
+                    }
+                    return prev;
+                });
             }
         } catch (error) {
             // console.error("Failed to load inspection checklist:", error);
@@ -132,13 +158,30 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
     };
 
     const toggleInventoryItem = (valoracionId, descripcion) => {
-        const currentStatus = formData.inventory?.[valoracionId]?.checked || false;
+        const currentData = formData.inventory?.[valoracionId] || { checked: true, observacion: '' };
+        const currentStatus = currentData.checked;
 
         const newInventory = {
             ...formData.inventory,
             [valoracionId]: {
+                ...currentData,
                 checked: !currentStatus,
                 descripcion: descripcion
+            }
+        };
+
+        const newForm = { ...formData, inventory: newInventory };
+        setFormData(newForm);
+        onUpdate(newForm);
+    };
+
+    const handleInventoryObservationChange = (valoracionId, text) => {
+        const currentData = formData.inventory?.[valoracionId] || { checked: false };
+        const newInventory = {
+            ...formData.inventory,
+            [valoracionId]: {
+                ...currentData,
+                observacion: text
             }
         };
 
@@ -301,23 +344,39 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                         <View key={tipo.TipoValoracionID} style={styles.inventorySection}>
                             <Text style={styles.subSectionTitle}>{tipo.TipoValoracionValor}</Text>
                             <View style={styles.inventoryGrid}>
-                                {tipo.Valoraciones.map((item) => (
-                                    <TouchableOpacity
-                                        key={item.ValoracionID}
-                                        style={styles.inventoryItem}
-                                        onPress={() => toggleInventoryItem(item.ValoracionID, item.ValoracionDescripcion)}
-                                    >
-                                        <View style={[
-                                            styles.checkbox,
-                                            formData.inventory?.[item.ValoracionID]?.checked && styles.checkboxActive
-                                        ]}>
-                                            {formData.inventory?.[item.ValoracionID]?.checked && (
-                                                <MaterialCommunityIcons name="check" size={16} color="#fff" />
+                                {tipo.Valoraciones.map((item) => {
+                                    const itemData = formData.inventory?.[item.ValoracionID];
+                                    const isChecked = itemData ? itemData.checked : true; // Default true visually before state catches up
+
+                                    return (
+                                        <View key={item.ValoracionID} style={styles.inventoryItemContainer}>
+                                            <TouchableOpacity
+                                                style={styles.inventoryItemRow}
+                                                onPress={() => toggleInventoryItem(item.ValoracionID, item.ValoracionDescripcion)}
+                                            >
+                                                <View style={[
+                                                    styles.checkbox,
+                                                    isChecked && styles.checkboxActive
+                                                ]}>
+                                                    {isChecked && (
+                                                        <MaterialCommunityIcons name="check" size={16} color="#fff" />
+                                                    )}
+                                                </View>
+                                                <Text style={styles.inventoryLabel}>{item.ValoracionDescripcion}</Text>
+                                            </TouchableOpacity>
+                                            
+                                            {!isChecked && (
+                                                <TextInput
+                                                    style={styles.inventoryInput}
+                                                    placeholder="Motivo (ej. dañado)..."
+                                                    value={itemData?.observacion || ''}
+                                                    onChangeText={(text) => handleInventoryObservationChange(item.ValoracionID, text)}
+                                                    maxLength={100}
+                                                />
                                             )}
                                         </View>
-                                        <Text style={styles.inventoryLabel}>{item.ValoracionDescripcion}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                                    );
+                                })}
                             </View>
                         </View>
                     ))
@@ -601,12 +660,25 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
     },
-    inventoryItem: {
+    inventoryItemContainer: {
         width: '50%', // 2 columns
+        marginBottom: 12,
+        paddingRight: 10,
+    },
+    inventoryItemRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
-        paddingRight: 5,
+        marginBottom: 4,
+    },
+    inventoryInput: {
+        borderWidth: 1,
+        borderColor: '#ced4da',
+        borderRadius: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        height: 32,
+        fontSize: 12,
+        backgroundColor: '#fff',
     },
     checkbox: {
         width: 20,

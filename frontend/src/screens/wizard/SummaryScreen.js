@@ -27,12 +27,17 @@ const InfoRow = ({ label, value, colorIndicator }) => (
     </View>
 );
 
-const InventoryRow = ({ label, isPresent }) => (
-    <View style={styles.inventoryRow}>
-        <Text style={styles.inventoryLabelText}>{label}</Text>
-        <View style={[styles.inventoryBadge, isPresent ? styles.badgeYes : styles.badgeNo]}>
-            <Text style={styles.badgeText}>{isPresent ? 'SI' : 'NO'}</Text>
+const InventoryRow = ({ label, isPresent, remark }) => (
+    <View style={styles.inventoryRowContainer}>
+        <View style={styles.inventoryRow}>
+            <Text style={styles.inventoryLabelText}>{label}</Text>
+            <View style={[styles.inventoryBadge, isPresent ? styles.badgeYes : styles.badgeNo]}>
+                <Text style={styles.badgeText}>{isPresent ? 'SI' : 'NO'}</Text>
+            </View>
         </View>
+        {!isPresent && remark ? (
+            <Text style={styles.inventoryRemarkText}>Motivo: {remark}</Text>
+        ) : null}
     </View>
 );
 
@@ -118,10 +123,15 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
             // Handle both old boolean format and new object format
             const isChecked = typeof itemData === 'object' ? !!itemData.checked : !!itemData;
             const description = typeof itemData === 'object' ? itemData.descripcion : `Item ${id}`;
+            const remark = typeof itemData === 'object' ? itemData.observacion : '';
 
             return (
                 <View key={id} style={styles.inventoryGridItem}>
-                    <InventoryRow label={description || `Item ${id}`} isPresent={isChecked} />
+                    <InventoryRow 
+                        label={description || `Item ${id}`} 
+                        isPresent={isChecked} 
+                        remark={remark}
+                    />
                 </View>
             );
         }).filter(item => item !== null);
@@ -447,11 +457,21 @@ const styles = StyleSheet.create({
         paddingRight: 5,
         marginBottom: 5,
     },
+    inventoryRowContainer: {
+        flexDirection: 'column',
+    },
     inventoryRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         paddingVertical: 2,
+    },
+    inventoryRemarkText: {
+        fontSize: 10,
+        color: '#dc3545',
+        fontStyle: 'italic',
+        marginTop: 2,
+        marginLeft: 2,
     },
     inventoryLabelText: {
         fontSize: 12,
