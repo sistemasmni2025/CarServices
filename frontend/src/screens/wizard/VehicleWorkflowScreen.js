@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import VehicleStyleScreen from './VehicleStyleScreen';
 import VehicleDetailsScreen from './VehicleDetailsScreen';
 import VehicleListScreen from './VehicleListScreen';
 import { searchVehiclesSoap, registerVehicleSoap } from '../../services/vehicles';
+import { AuthContext } from '../../context/AuthContext';
 
 const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
+    const { selectedBranch } = useContext(AuthContext);
     /**
      * Paso 3 del Wizard: Flujo de Vehículos.
      * Maneja sub-pasos:
@@ -43,7 +45,8 @@ const VehicleWorkflowScreen = ({ data, client, onUpdate, onCompletion }) => {
                 setLoading(true);
                 if (soapId && soapId !== '0') {
                     try {
-                        const found = await searchVehiclesSoap(soapId);
+                        const dns = selectedBranch?.dns || "";
+                        const found = await searchVehiclesSoap(soapId, dns);
                         // console.log("Vehicles found:", found);
                         if (found && found.length > 0) {
                             setVehicles(found);

@@ -84,7 +84,7 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
     // Extract actual data from wizardData
     const vehicleDetails = wizardData?.vehiculo?.details || {};
     const vehicleColorName = vehicleDetails.color || "---";
-    const mappedHex = colorNameMap[vehicleColorName.toString().toUpperCase()] || "#FFFFFF";
+    const mappedHex = colorNameMap[String(vehicleColorName).toUpperCase()] || "#FFFFFF";
     const inventoryData = vehicleDetails.inventory || {};
 
     const orderData = {

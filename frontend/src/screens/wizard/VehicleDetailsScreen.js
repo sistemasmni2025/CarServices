@@ -350,30 +350,30 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
 
                                     return (
                                         <View key={item.ValoracionID} style={styles.inventoryItemContainer}>
-                                            <TouchableOpacity
-                                                style={styles.inventoryItemRow}
-                                                onPress={() => toggleInventoryItem(item.ValoracionID, item.ValoracionDescripcion)}
-                                            >
-                                                <View style={[
-                                                    styles.checkbox,
-                                                    isChecked && styles.checkboxActive
-                                                ]}>
-                                                    {isChecked && (
-                                                        <MaterialCommunityIcons name="check" size={16} color="#fff" />
+                                            <View style={styles.inventoryItemRow}>
+                                                <TouchableOpacity
+                                                    style={[styles.toggleBtn, isChecked ? styles.toggleBtnSi : styles.toggleBtnNo]}
+                                                    onPress={() => toggleInventoryItem(item.ValoracionID, item.ValoracionDescripcion)}
+                                                >
+                                                    <Text style={[styles.toggleBtnText, isChecked ? styles.toggleTextSi : styles.toggleTextNo]}>
+                                                        {isChecked ? 'SI' : 'NO'}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                                
+                                                <View style={styles.inventoryTextContainer}>
+                                                    <Text style={styles.inventoryLabel}>{item.ValoracionDescripcion}</Text>
+                                                    {!isChecked && (
+                                                        <TextInput
+                                                            style={styles.inventoryInputCompact}
+                                                            placeholder="Motivo..."
+                                                            placeholderTextColor="#dc3545"
+                                                            value={itemData?.observacion || ''}
+                                                            onChangeText={(text) => handleInventoryObservationChange(item.ValoracionID, text)}
+                                                            maxLength={100}
+                                                        />
                                                     )}
                                                 </View>
-                                                <Text style={styles.inventoryLabel}>{item.ValoracionDescripcion}</Text>
-                                            </TouchableOpacity>
-                                            
-                                            {!isChecked && (
-                                                <TextInput
-                                                    style={styles.inventoryInput}
-                                                    placeholder="Motivo (ej. dañado)..."
-                                                    value={itemData?.observacion || ''}
-                                                    onChangeText={(text) => handleInventoryObservationChange(item.ValoracionID, text)}
-                                                    maxLength={100}
-                                                />
-                                            )}
+                                            </View>
                                         </View>
                                     );
                                 })}
@@ -661,44 +661,61 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     inventoryItemContainer: {
-        width: '50%', // 2 columns
-        marginBottom: 12,
+        width: '33.33%', // 3 columns
+        marginBottom: 8,
         paddingRight: 10,
     },
     inventoryItemRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
+        alignItems: 'flex-start',
     },
-    inventoryInput: {
-        borderWidth: 1,
-        borderColor: '#ced4da',
+    toggleBtn: {
+        width: 32,
+        height: 22,
         borderRadius: 4,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        height: 32,
-        fontSize: 12,
-        backgroundColor: '#fff',
-    },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderRadius: 4,
-        borderWidth: 2,
-        borderColor: '#ccc',
-        marginRight: 8,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        marginRight: 8,
+        borderWidth: 1,
     },
-    checkboxActive: {
-        backgroundColor: '#007bff',
-        borderColor: '#007bff',
+    toggleBtnSi: {
+        backgroundColor: '#d4edda',
+        borderColor: '#c3e6cb',
+    },
+    toggleBtnNo: {
+        backgroundColor: '#fff',
+        borderColor: '#ccc',
+    },
+    toggleTextSi: {
+        color: '#155724',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    toggleTextNo: {
+        color: '#666',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    inventoryTextContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingTop: 3,
     },
     inventoryLabel: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#333',
-        flex: 1,
+        textTransform: 'uppercase',
+    },
+    inventoryInputCompact: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#dc3545',
+        color: '#dc3545',
+        fontSize: 10,
+        fontStyle: 'italic',
+        paddingVertical: 0,
+        paddingHorizontal: 0,
+        height: 18,
+        marginTop: 2,
     }
 });
 

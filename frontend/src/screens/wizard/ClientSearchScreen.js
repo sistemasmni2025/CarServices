@@ -5,10 +5,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { searchClients, createClient, syncClient } from '../../services/clients';
 import { ActivityIndicator, Alert } from 'react-native';
 import ClientCreateModal from './ClientCreateModal';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 
 // CONSTANTS MOVED TO ClientCreateModal.js
 
 const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
+    const { selectedBranch } = useContext(AuthContext);
     /**
      * Paso 2 del Wizard: Búsqueda y Selección de Cliente.
      * Permite buscar clientes existentes o crear nuevos (modales).
@@ -44,7 +47,8 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
         if (searchQuery.trim().length > 2) {
             setIsLoading(true);
             try {
-                const results = await searchClients(searchQuery);
+                const dns = selectedBranch?.dns || "";
+                const results = await searchClients(searchQuery, dns);
                 if (Array.isArray(results)) {
                     setFilteredClients(results);
                 } else if (results && typeof results === 'object') {

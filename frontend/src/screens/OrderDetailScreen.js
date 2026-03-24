@@ -45,6 +45,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
         const clientInfo = orderData.Cliente || orderData;
         const vehicleInfo = orderData.Vehiculo || orderData;
         const photosList = orderData.Fotos || [];
+        const inspectionsList = orderData.Inspeccion || [];
 
         if (!orderInfo || !orderInfo.OrdenID) return <Text style={styles.errorText}>No se encontraron datos de la orden.</Text>;
 
@@ -125,6 +126,38 @@ const OrderDetailScreen = ({ route, navigation }) => {
                         <Text style={[styles.detailText, { fontSize: 16 }]}>{orderInfo.OrdenObservaciones || 'Sin observaciones'}</Text>
                     </View>
                 </View>
+
+                {inspectionsList && inspectionsList.length > 0 && (
+                    <View style={styles.detailSection}>
+                        <Text style={styles.detailSectionTitle}>Inspección Vehicular</Text>
+                        <Text style={[styles.detailText, {fontSize: 12, fontStyle: 'italic', marginBottom: 10, marginLeft: 0, color: '#666'}]}>Puntos Verificados:</Text>
+                        <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+                            {inspectionsList.map((item, index) => (
+                                <View key={index} style={{width: '33.33%', marginBottom: 12, paddingRight: 10, flexDirection: 'row', alignItems: 'flex-start'}}>
+                                    <View style={[
+                                        styles.detailToggleBtn, 
+                                        item.InspeccionValor === 1 ? styles.detailToggleSi : styles.detailToggleNo
+                                    ]}>
+                                        <Text style={[
+                                            styles.detailToggleText, 
+                                            item.InspeccionValor === 1 ? styles.detailToggleTextSi : styles.detailToggleTextNo
+                                        ]}>
+                                            {item.InspeccionValor === 1 ? 'SI' : 'NO'}
+                                        </Text>
+                                    </View>
+                                    <View style={{flex: 1}}>
+                                        <Text style={{fontSize: 11, color: '#333', textTransform: 'uppercase', paddingTop: 3}}>{item.ValoracionDescripcion}</Text>
+                                        {item.InspeccionValor === 0 && item.InspeccionDescripcion ? (
+                                            <Text style={{fontSize: 10, color: '#dc3545', fontStyle: 'italic', marginTop: 2}}>
+                                                Motivo: {item.InspeccionDescripcion}
+                                            </Text>
+                                        ) : null}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                )}
 
                 <View style={[styles.detailSection, { marginBottom: 0 }]}>
                     <Text style={styles.detailSectionTitle}>Asignación y Supervisión</Text>
@@ -358,6 +391,33 @@ const styles = StyleSheet.create({
         marginRight: 15,
         alignItems: 'center',
         width: 100,
+    },
+    detailToggleBtn: {
+        width: 32,
+        height: 22,
+        borderRadius: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+        borderWidth: 1,
+    },
+    detailToggleSi: {
+        backgroundColor: '#d4edda',
+        borderColor: '#c3e6cb',
+    },
+    detailToggleNo: {
+        backgroundColor: '#fff',
+        borderColor: '#ccc',
+    },
+    detailToggleText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    detailToggleTextSi: {
+        color: '#155724',
+    },
+    detailToggleTextNo: {
+        color: '#666',
     },
     galleryImage: {
         width: 100,

@@ -285,7 +285,7 @@ const DatePickerFieldPoly = ({ label, dateValue, onDateChange, minimumDate, disa
 
 
 const IngresoScreen = ({ data, onUpdate, onNext }) => {
-    const { userData } = useContext(AuthContext);
+    const { userData, selectedBranch } = useContext(AuthContext);
     const [asesoresList, setAsesoresList] = useState([]);
     const [loadingAsesores, setLoadingAsesores] = useState(false);
 
@@ -335,7 +335,8 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
                     const fetchList = async () => {
                         setLoadingAsesores(true);
                         try {
-                            const list = await getAsesores();
+                            const dns = selectedBranch?.dns || "";
+                            const list = await getAsesores(dns);
                             setAsesoresList(list || []);
                             // Remove auto-select first in list
                             if (!form.asesorId && !form.asesor && userData?.usuarioclavepiso) {
@@ -466,10 +467,12 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
                                 enabled={!userData?.usuarioclavepiso}
                                 onValueChange={(itemValue) => {
                                     // Find name string-safe
-                                    const selectedAsesor = asesoresList.find(a => a.apisocve.toString() === (itemValue || "").toString());
+                                    const selectedAsesor = asesoresList.find(a => 
+                                        (a.apisocve || a.ApisoCve || a.APISOCVE || a.AsesorID || a.id || "").toString() === (itemValue || "").toString()
+                                    );
                                     updateForm({
                                         asesorId: itemValue,
-                                        asesor: selectedAsesor ? selectedAsesor.apisonom : form.asesor
+                                        asesor: selectedAsesor ? (selectedAsesor.apisonom || selectedAsesor.ApisoNom || selectedAsesor.APISONOM || selectedAsesor.AsesorNombre || selectedAsesor.nombre || selectedAsesor.Nombre || form.asesor) : form.asesor
                                     });
                                 }}
                             >
@@ -481,13 +484,17 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
                                 ) : (
                                     <>
                                         <Picker.Item key="unselected" label="Seleccione" value="" />
-                                        {asesoresList.map(asesor => (
-                                            <Picker.Item
-                                                key={asesor.apisocve.toString()}
-                                                label={asesor.apisonom}
-                                                value={asesor.apisocve}
-                                            />
-                                        ))}
+                                        {asesoresList.map(asesor => {
+                                            const id = asesor.apisocve || asesor.ApisoCve || asesor.APISOCVE || asesor.AsesorID || asesor.id || "";
+                                            const name = asesor.apisonom || asesor.ApisoNom || asesor.APISONOM || asesor.AsesorNombre || asesor.nombre || asesor.Nombre || "Asesor";
+                                            return (
+                                                <Picker.Item
+                                                    key={(id || Math.random()).toString()}
+                                                    label={name.toString()}
+                                                    value={id}
+                                                />
+                                            );
+                                        })}
                                     </>
                                 )}
                             </Picker>

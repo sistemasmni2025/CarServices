@@ -15,10 +15,10 @@ export const getClientById = async (id) => {
     return response.data;
 };
 
-export const searchClients = async (query) => {
-    // console.log(`[clients.js] native fetch starting for: ${query}`);
+export const searchClients = async (query, dns) => {
+    // console.log(`[clients.js] native fetch starting for: ${query} on dns: ${dns}`);
     try {
-        const response = await fetch(`http://172.16.71.199:8000/clientes/soap/clientes?q=${encodeURIComponent(query)}`, {
+        const response = await fetch(`http://172.16.71.199:8000/soap/clientes?ip=${dns || ''}&criterio=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'

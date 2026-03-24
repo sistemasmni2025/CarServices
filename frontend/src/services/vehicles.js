@@ -16,12 +16,12 @@ export const getUniqueCatalog = async () => {
     return response.data;
 };
 
-export const searchVehiclesSoap = async (clientId) => {
+export const searchVehiclesSoap = async (clientId, dns) => {
     /**
      * Busca vehículos directamente en el backend .52
      */
     try {
-        const response = await api.get(`/vehiculos/soap/${clientId}`);
+        const response = await api.get(`/soap/placas?ip=${dns || ''}&clicve=${clientId}`);
         // Handle wrapper if present
         if (response.data && response.data.success && Array.isArray(response.data.data)) {
             return response.data.data;

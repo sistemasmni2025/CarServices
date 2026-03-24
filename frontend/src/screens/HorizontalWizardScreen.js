@@ -304,14 +304,11 @@ const HorizontalWizardScreen = ({ navigation }) => {
             const inventory = currentData.vehiculo?.details?.inventory || {};
             const inspeccionPayload = Object.entries(inventory)
                 .map(([id, itemData]) => ({
-                    InspeccionID: null,
                     OrdenID: 0,
                     ValoracionID: parseInt(id),
+                    ValoracionDescripcion: typeof itemData === 'object' ? (itemData.descripcion || "") : "",
                     InspeccionValor: (typeof itemData === 'object' ? !!itemData.checked : !!itemData) ? 1 : 0,
-                    InspeccionDescripcion: typeof itemData === 'object' ? (itemData.observacion || "") : "",
-                    InspeccionObservacion: typeof itemData === 'object' ? (itemData.observacion || "") : "",
-                    descripcion: typeof itemData === 'object' ? (itemData.observacion || "") : "",
-                    observacion: typeof itemData === 'object' ? (itemData.observacion || "") : ""
+                    InspeccionDescripcion: typeof itemData === 'object' ? (itemData.observacion || "") : ""
                 }));
 
             // 4. CONSTRUIR MEGA-PAYLOAD (Alineado estrictamente con el formato del backend)
@@ -319,6 +316,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
             const deliveryDateStr = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('.')[0];
 
             const megaPayload = {
+                DNS: selectedBranch?.dns || "",
                 Orden: {
                     OrdenID: parseInt(currentData.ingreso?.noOrden || 0),
                     UsuarioID: parseInt(userData?.id || 1),

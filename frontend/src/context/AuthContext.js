@@ -34,7 +34,9 @@ export const AuthProvider = ({ children }) => {
             user.sucursales = user.sucursales.map(s => ({
                 ...s,
                 id: s.id || s.SucursalID,
-                nombre: s.nombre || s.SucursalNombre
+                nombre: s.nombre || s.SucursalNombre,
+                dns: s.SucursalDNS || s.SucursalDns || s.sucursaldns || s.DNS || s.dns || s.sucursal_dns || 
+                     s.SucursalIP || s.SucursalIp || s.sucursalip || s.ip || s.IP || s.sucursal_ip || ""
             }));
 
             setUserToken(token);
@@ -114,7 +116,9 @@ export const AuthProvider = ({ children }) => {
                     parsedUser.sucursales = parsedUser.sucursales.map(s => ({
                         ...s,
                         id: s.id || s.SucursalID,
-                        nombre: s.nombre || s.SucursalNombre
+                        nombre: s.nombre || s.SucursalNombre,
+                        dns: s.SucursalDNS || s.SucursalDns || s.sucursaldns || s.DNS || s.dns || s.sucursal_dns || 
+                             s.SucursalIP || s.SucursalIp || s.sucursalip || s.ip || s.IP || s.sucursal_ip || ""
                     }));
                 }
                 setUserData(parsedUser);
@@ -124,7 +128,11 @@ export const AuthProvider = ({ children }) => {
                 const normalizedBranch = {
                     ...parsedBranch,
                     id: parsedBranch.id || parsedBranch.SucursalID,
-                    nombre: parsedBranch.nombre || parsedBranch.SucursalNombre
+                    nombre: parsedBranch.nombre || parsedBranch.SucursalNombre,
+                    dns: parsedBranch.SucursalDNS || parsedBranch.SucursalDns || parsedBranch.sucursaldns || 
+                         parsedBranch.DNS || parsedBranch.dns || parsedBranch.sucursal_dns || 
+                         parsedBranch.SucursalIP || parsedBranch.SucursalIp || parsedBranch.sucursalip || 
+                         parsedBranch.ip || parsedBranch.IP || parsedBranch.sucursal_ip || ""
                 };
                 setSelectedBranch(normalizedBranch);
             }
