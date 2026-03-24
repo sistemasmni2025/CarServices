@@ -18,7 +18,7 @@ export const getClientById = async (id) => {
 export const searchClients = async (query, dns) => {
     // console.log(`[clients.js] native fetch starting for: ${query} on dns: ${dns}`);
     try {
-        const response = await fetch(`http://172.16.71.199:8000/soap/clientes?ip=${dns || ''}&criterio=${encodeURIComponent(query)}`, {
+        const response = await fetch(`http://51.79.17.52:8000/soap/clientes?ip=${dns || ''}&criterio=${encodeURIComponent(query)}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'

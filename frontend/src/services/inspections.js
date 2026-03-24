@@ -43,7 +43,7 @@ export const saveInspections = async (inspections) => {
     try {
         // inspections: Array of { OrdenID, ValoracionID, InspeccionValor }
         // Pointing directly to port 3000 on .52
-        const response = await api.post('http://172.16.71.199:8000/api/inspeccion/guardar', inspections);
+        const response = await api.post('http://51.79.17.52:8000/api/inspeccion/guardar', inspections);
         return response.data;
     } catch (error) {
         // console.error("Error saving inspections:", error);

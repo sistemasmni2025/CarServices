@@ -5,7 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import api from './api';
 
 // Use remote endpoint directly
-const UPLOAD_URL = 'http://172.16.71.199:8000/evidencias/nueva';
+const UPLOAD_URL = 'http://51.79.17.52:8000/evidencias/nueva';
 
 const optimizeImage = async (uri) => {
     /**
