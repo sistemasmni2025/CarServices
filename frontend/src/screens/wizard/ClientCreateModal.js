@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Keyboard } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createClient } from '../../services/clients';
+import { AuthContext } from '../../context/AuthContext';
 
 const REGIMENES_FISCALES = [
     { label: 'Selecciona', value: '' },
@@ -72,6 +73,7 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
      * Permite registrar un nuevo cliente con los datos mínimos necesarios (Nombre, RFC).
      * Sincroniza con el backend tras la creación.
      */
+    const { selectedBranch } = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         nombre: '',
@@ -103,6 +105,7 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
         try {
             // Mapeo exacto basado en la captura de Postman proporcionada
             const payloadPostman = {
+                DNS: selectedBranch?.dns || "",
                 ClienteClave: `C${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`,
                 ClienteNombre: formData.nombre.trim(),
                 ClienteRazon: formData.razon_social ? formData.razon_social.trim() : formData.nombre.trim(),
@@ -161,6 +164,14 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleSetGeneric = () => {
+        setFormData({
+            ...formData,
+            rfc: 'XAXX010101000',
+            regimen_fiscal: '616'
+        });
     };
 
     return (
@@ -319,20 +330,30 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
                     </ScrollView>
 
                     <View style={styles.modalFooter}>
-                        <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                            <Text style={styles.cancelButtonText}>Cerrar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.saveButton, isLoading && { backgroundColor: '#ccc' }]}
-                            onPress={handleSaveClient}
+                        <TouchableOpacity 
+                            style={styles.genericButton} 
+                            onPress={handleSetGeneric}
                             disabled={isLoading}
                         >
-                            {isLoading ? (
-                                <ActivityIndicator size="small" color="#fff" />
-                            ) : (
-                                <Text style={styles.saveButtonText}>Confirmar</Text>
-                            )}
+                            <Text style={styles.genericButtonText}>Generico</Text>
                         </TouchableOpacity>
+
+                        <View style={styles.footerRightButtons}>
+                            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                                <Text style={styles.cancelButtonText}>Cerrar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.saveButton, isLoading && { backgroundColor: '#ccc' }]}
+                                onPress={handleSaveClient}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.saveButtonText}>Confirmar</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -410,8 +431,25 @@ const styles = StyleSheet.create({
     },
     modalFooter: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    footerRightButtons: {
+        flexDirection: 'row',
         gap: 8,
+    },
+    genericButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 18,
+        backgroundColor: '#58ace3',
+        elevation: 2,
+    },
+    genericButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     cancelButton: {
         paddingVertical: 8,

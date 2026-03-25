@@ -6,7 +6,7 @@ export const getClients = async () => {
 };
 
 export const createClient = async (clientData) => {
-    const response = await api.post('/clientes/crear', clientData);
+    const response = await api.post('/clientes/nuevo', clientData);
     return response.data;
 };
 

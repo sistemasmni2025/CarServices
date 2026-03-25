@@ -2,7 +2,7 @@ import api from './api';
 
 export const createVehicle = async (vehicleData) => {
     // Sync directly with .52
-    const response = await api.post('/vehiculos/crear', vehicleData);
+    const response = await api.post('/vehiculos/nuevo', vehicleData);
     return response.data;
 };
 

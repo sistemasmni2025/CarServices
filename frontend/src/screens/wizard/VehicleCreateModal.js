@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Keyboard } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createVehicle } from '../../services/vehicles';
+import { AuthContext } from '../../context/AuthContext';
 
 const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
     /**
@@ -9,6 +10,7 @@ const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
      * Permite registrar un nuevo vehículo con los datos necesarios (Placas, Marca, Modelo, etc.).
      * Sincroniza con el backend tras la creación.
      */
+    const { selectedBranch } = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         tag: '',
@@ -30,6 +32,7 @@ const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
         try {
             // Mapeo exacto basado en la misma lógica que alta rápida de clientes
             const payloadPostman = {
+                DNS: selectedBranch?.dns || "",
                 VehiculoPlacas: formData.tag.trim().toUpperCase(),
                 VehiculoMarca: formData.brand.trim(),
                 VehiculoModelo: formData.model.trim(),

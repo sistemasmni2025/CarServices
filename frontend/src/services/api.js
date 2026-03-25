@@ -8,7 +8,7 @@ const API_URL = 'http://51.79.17.52:8000';
 
 /**
  * API instance.
- * Points directly to the remote server on .199.
+ * Points directly to the remote server on .52.
  */
 const api = axios.create({
     baseURL: API_URL,
