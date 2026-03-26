@@ -78,25 +78,26 @@ const OrderSearchScreen = ({ navigation }) => {
     };
 
     const StatusFilter = () => (
-        <View style={styles.statusFilterContainer}>
-            <TouchableOpacity
-                style={[styles.statusOption, selectedStatus === 'A' && styles.activeStatusOption]}
-                onPress={() => setSelectedStatus('A')}
-            >
-                <Text style={[styles.statusOptionText, selectedStatus === 'A' && styles.activeStatusOptionText]}>Abiertas</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={[styles.statusOption, selectedStatus === 'T' && styles.activeStatusOption]}
-                onPress={() => setSelectedStatus('T')}
-            >
-                <Text style={[styles.statusOptionText, selectedStatus === 'T' && styles.activeStatusOptionText]}>Terminadas</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={[styles.statusOption, selectedStatus === 'C' && styles.activeStatusOption]}
-                onPress={() => setSelectedStatus('C')}
-            >
-                <Text style={[styles.statusOptionText, selectedStatus === 'C' && styles.activeStatusOptionText]}>Canceladas</Text>
-            </TouchableOpacity>
+        <View style={styles.statusTabsWrapper}>
+            <View style={styles.statusTabsContainer}>
+                {[
+                    { label: 'Abiertas', value: 'A' },
+                    { label: 'Terminadas', value: 'T' },
+                    { label: 'Cerradas', value: 'C' },
+                    { label: 'Canceladas', value: 'X' }
+                ].map((item) => (
+                    <TouchableOpacity
+                        key={item.value}
+                        style={[styles.statusTab, selectedStatus === item.value && styles.activeStatusTab]}
+                        onPress={() => setSelectedStatus(item.value)}
+                    >
+                        <Text style={[styles.statusTabText, selectedStatus === item.value && styles.activeStatusTabText]}>
+                            {item.label}
+                        </Text>
+                        {selectedStatus === item.value && <View style={styles.tabIndicator} />}
+                    </TouchableOpacity>
+                ))}
+            </View>
         </View>
     );
 
@@ -126,13 +127,13 @@ const OrderSearchScreen = ({ navigation }) => {
                 <Text style={styles.cardOrderId}>{item.OrdenIDGen || `ID: ${item.OrdenID}`}</Text>
                 <View style={[
                     styles.statusBadge,
-                    { backgroundColor: item.OrdenEstatus === 'T' ? '#E8F5E9' : item.OrdenEstatus === 'C' ? '#FFEBEE' : '#E8F4FD' }
+                    { backgroundColor: item.OrdenEstatus === 'T' ? '#E8F5E9' : item.OrdenEstatus === 'X' ? '#FFEBEE' : item.OrdenEstatus === 'C' ? '#F5F5F5' : '#E8F4FD' }
                 ]}>
                     <Text style={[
                         styles.statusText,
-                        { color: item.OrdenEstatus === 'T' ? '#2E7D32' : item.OrdenEstatus === 'C' ? '#C62828' : '#0056b3' }
+                        { color: item.OrdenEstatus === 'T' ? '#2E7D32' : item.OrdenEstatus === 'X' ? '#C62828' : item.OrdenEstatus === 'C' ? '#616161' : '#0056b3' }
                     ]}>
-                        {item.OrdenEstatus === 'T' ? 'Terminada' : item.OrdenEstatus === 'C' ? 'Cancelada' : 'Abierta'}
+                        {item.OrdenEstatus === 'T' ? 'Terminada' : item.OrdenEstatus === 'X' ? 'Cancelada' : item.OrdenEstatus === 'C' ? 'Cerrada' : 'Abierta'}
                     </Text>
                 </View>
             </View>
@@ -241,7 +242,7 @@ const OrderSearchScreen = ({ navigation }) => {
                         ) : ordersList.length === 0 ? (
                             <View style={styles.centerContainer}>
                                 <MaterialCommunityIcons name="format-list-checks" size={60} color="#CCC" />
-                                <Text style={styles.placeholderText}>No se encontraron órdenes {selectedStatus === 'A' ? 'abiertas' : selectedStatus === 'T' ? 'terminadas' : 'canceladas'} en esta sucursal.</Text>
+                                <Text style={styles.placeholderText}>No se encontraron órdenes {selectedStatus === 'A' ? 'abiertas' : selectedStatus === 'T' ? 'terminadas' : selectedStatus === 'C' ? 'cerradas' : 'canceladas'} en esta sucursal.</Text>
                                 <TouchableOpacity style={styles.retryButton} onPress={fetchOrders}>
                                     <Text style={styles.retryButtonText}>Actualizar</Text>
                                 </TouchableOpacity>
@@ -343,32 +344,42 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 10,
     },
-    statusFilterContainer: {
-        flexDirection: 'row',
+    statusTabsWrapper: {
         backgroundColor: '#FFF',
-        borderRadius: 8,
-        padding: 4,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E0E0E0',
         marginBottom: 10,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
     },
-    statusOption: {
+    statusTabsContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 5,
+    },
+    statusTab: {
         flex: 1,
-        paddingVertical: 8,
+        paddingVertical: 15,
         alignItems: 'center',
-        borderRadius: 6,
+        position: 'relative',
     },
-    activeStatusOption: {
-        backgroundColor: '#007BFF',
+    activeStatusTab: {
+        // Active background color can be transparent as we use indicator
     },
-    statusOptionText: {
-        fontSize: 13,
+    statusTabText: {
+        fontSize: 14,
         fontWeight: '600',
         color: '#666',
     },
-    activeStatusOptionText: {
-        color: '#FFF',
+    activeStatusTabText: {
+        color: '#007BFF',
         fontWeight: 'bold',
+    },
+    tabIndicator: {
+        position: 'absolute',
+        bottom: 0,
+        left: '10%',
+        right: '10%',
+        height: 3,
+        backgroundColor: '#007BFF',
+        borderRadius: 3,
     },
     sortContainer: {
         flexDirection: 'row',
