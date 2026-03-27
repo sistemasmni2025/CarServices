@@ -331,7 +331,8 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     OrdenFecha: isoDateStr,
                     OrdenFechaIngreso: isoDateStr,
                     OrdenFechaEntrega: deliveryDateStr,
-                    OrdenObservaciones: currentData.vehiculo.details.observaciones || "Ingreso desde App Móvil/Tablet",
+                    OrdenObservaciones: currentData.vehiculo?.details?.observaciones || "Ingreso desde App Móvil/Tablet",
+                    OrdenKilometraje: parseInt(currentData.vehiculo?.details?.mileage || 0),
                     OrdenEstatus: "A",
                     SucursalID: parseInt(selectedBranch?.id || 1)
                 },
@@ -356,8 +357,9 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 Vehiculo: {
                     VehiculoPlacas: currentData.vehiculo.details.plates || currentData.vehiculo.details.tag || "",
                     VehiculoMarca: currentData.vehiculo.details.brand || "",
-                    VehiculoModelo: currentData.vehiculo.details.model ? `${currentData.vehiculo.details.model} ${currentData.vehiculo.details.year || ''}`.trim() : "",
-                    VehiculoColor: currentData.vehiculo.details.color || "",
+                    VehiculoModelo: currentData.vehiculo?.details?.model || "",
+                    VehiculoAnio: parseInt(currentData.vehiculo?.details?.year || 0),
+                    VehiculoColor: currentData.vehiculo?.details?.color || "",
                     VehiculoNumSerie: currentData.vehiculo.details.chassis || null,
                     VehiculoIDGen: parseInt(currentData.vehiculo.details.id || 0),
                     ClienteID: parseInt(currentData.cliente?.id || 0)
