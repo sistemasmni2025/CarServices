@@ -332,7 +332,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     OrdenFechaIngreso: isoDateStr,
                     OrdenFechaEntrega: deliveryDateStr,
                     OrdenObservaciones: currentData.vehiculo?.details?.observaciones || "Ingreso desde App Móvil/Tablet",
-                    OrdenKilometraje: parseInt(currentData.vehiculo?.details?.mileage || 0),
+                    OrdenKM: parseInt(currentData.vehiculo?.details?.mileage || 0),
                     OrdenEstatus: "A",
                     SucursalID: parseInt(selectedBranch?.id || 1)
                 },
