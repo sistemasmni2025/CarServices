@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, ScrollView, ActivityIndicator, Modal, FlatList, Dimensions, useWindowDimensions, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getOrdersList } from '../services/orders';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const OrderDetailScreen = ({ route, navigation }) => {
+    const { width } = useWindowDimensions();
     const { ordenId, ordenIdGen } = route.params || {};
     const [orderDetails, setOrderDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedImage, setSelectedImage] = useState(null); // Estado para imagen grande
+    const [viewerVisible, setViewerVisible] = useState(false);
+    const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+    const flatListRef = React.useRef(null);
 
     useEffect(() => {
         if (ordenId) {
@@ -103,7 +108,11 @@ const OrderDetailScreen = ({ route, navigation }) => {
                     </View>
                     <View style={styles.detailRow}>
                         <MaterialCommunityIcons name="speedometer" size={24} color="#666" />
-                        <Text style={styles.detailText}>{vehicleInfo.VehiculoKilometraje ? `${vehicleInfo.VehiculoKilometraje} km` : 'Kilometraje No Disponible'}</Text>
+                        <Text style={styles.detailText}>
+                            {orderInfo.OrdenKM || orderInfo.OrdenKilometraje || vehicleInfo.VehiculoKilometraje 
+                                ? `${orderInfo.OrdenKM || orderInfo.OrdenKilometraje || vehicleInfo.VehiculoKilometraje} km` 
+                                : 'Kilometraje No Disponible'}
+                        </Text>
                     </View>
                     <View style={styles.detailRow}>
                         <MaterialCommunityIcons name="barcode" size={24} color="#666" />
@@ -179,7 +188,10 @@ const OrderDetailScreen = ({ route, navigation }) => {
                                 <TouchableOpacity 
                                     key={foto.EvidenciaID || index} 
                                     style={styles.galleryItem}
-                                    onPress={() => setSelectedImage(foto.FotografiaURL)}
+                                    onPress={() => {
+                                        setCurrentPhotoIndex(index);
+                                        setViewerVisible(true);
+                                    }}
                                 >
                                     <Image 
                                         source={{ uri: foto.FotografiaURL }} 
@@ -231,29 +243,122 @@ const OrderDetailScreen = ({ route, navigation }) => {
                 )}
             </ScrollView>
 
-            {/* Modal de Imagen en Grande */}
+            {/* Modal de Visor de Fotos tipo Carrusel */}
             <Modal
-                visible={!!selectedImage}
+                visible={viewerVisible}
                 transparent={true}
                 animationType="fade"
-                onRequestClose={() => setSelectedImage(null)}
+                onRequestClose={() => setViewerVisible(false)}
             >
-                <View style={styles.modalBackground}>
-                    <TouchableOpacity 
-                        style={styles.closeModalArea} 
-                        onPress={() => setSelectedImage(null)} 
-                    />
-                    <View style={styles.imageModalContainer}>
-                        <Image 
-                            source={{ uri: selectedImage }} 
-                            style={styles.fullImage} 
-                            resizeMode="contain"
-                        />
-                        <TouchableOpacity style={styles.closeModalButton} onPress={() => setSelectedImage(null)}>
-                            <MaterialCommunityIcons name="close-circle" size={40} color="#FFF" />
+                <SafeAreaView style={styles.modalBackground}>
+                    <View style={styles.carouselHeader}>
+                        <TouchableOpacity 
+                            style={styles.carouselCloseButton} 
+                            onPress={() => setViewerVisible(false)}
+                        >
+                            <MaterialCommunityIcons name="close" size={30} color="#FFF" />
                         </TouchableOpacity>
                     </View>
-                </View>
+
+                    <View style={[styles.carouselContent, { flex: 1, flexDirection: 'row', alignItems: 'center', width, height: '100%' }]}>
+                        {Platform.OS === 'web' && currentPhotoIndex > 0 && (
+                            <TouchableOpacity 
+                                style={[styles.navButton, styles.navButtonLeft]} 
+                                onPress={() => {
+                                    const newIndex = currentPhotoIndex - 1;
+                                    setCurrentPhotoIndex(newIndex);
+                                    flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+                                }}
+                            >
+                                <MaterialCommunityIcons name="chevron-left" size={50} color="rgba(255,255,255,0.7)" />
+                            </TouchableOpacity>
+                        )}
+
+                        {Platform.OS === 'web' ? (
+                            <View style={[styles.carouselSlide, { width, height: '100%', flex: 1 }]}>
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                    {orderDetails?.Fotos[currentPhotoIndex] ? (
+                                        <Image 
+                                            source={{ uri: orderDetails.Fotos[currentPhotoIndex].FotografiaURL }} 
+                                            style={{ width: width * 0.9, height: '80%' }} 
+                                            resizeMode="contain"
+                                        />
+                                    ) : (
+                                        <Text style={{ color: '#FFF' }}>Cargando imagen...</Text>
+                                    )}
+                                </View>
+                                <View style={styles.photoIndicatorContainer}>
+                                    <Text style={styles.photoIndicatorText}>
+                                        {orderDetails?.Fotos[currentPhotoIndex]?.TipoEvidenciaDescripcion || 'Evidencia'} ({currentPhotoIndex + 1} / {(orderDetails?.Fotos || []).length})
+                                    </Text>
+                                </View>
+                            </View>
+                        ) : (
+                            <FlatList
+                                ref={flatListRef}
+                                key={width}
+                                data={orderDetails?.Fotos || []}
+                                horizontal
+                                pagingEnabled
+                                initialScrollIndex={currentPhotoIndex}
+                                getItemLayout={(data, index) => ({
+                                    length: width,
+                                    offset: width * index,
+                                    index,
+                                })}
+                                keyExtractor={(item, index) => index.toString()}
+                                showsHorizontalScrollIndicator={false}
+                                onScrollToIndexFailed={info => {
+                                    const wait = new Promise(resolve => setTimeout(resolve, 100));
+                                    wait.then(() => {
+                                        flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+                                    });
+                                }}
+                                onMomentumScrollEnd={(e) => {
+                                    const index = Math.round(e.nativeEvent.contentOffset.x / (width || 1));
+                                    setCurrentPhotoIndex(index);
+                                }}
+                                style={{ flex: 1, width: '100%' }}
+                                contentContainerStyle={{ flexGrow: 1 }}
+                                renderItem={({ item, index }) => (
+                                    <View style={[styles.carouselSlide, { width, height: '100%' }]}>
+                                        <ScrollView
+                                            maximumZoomScale={3}
+                                            minimumZoomScale={1}
+                                            showsHorizontalScrollIndicator={false}
+                                            showsVerticalScrollIndicator={false}
+                                            contentContainerStyle={[styles.zoomWrapper, { width }]}
+                                        >
+                                            <Image 
+                                                source={{ uri: item.FotografiaURL }} 
+                                                style={[styles.fullImage, { width }]} 
+                                                resizeMode="contain"
+                                            />
+                                        </ScrollView>
+                                        <View style={styles.photoIndicatorContainer}>
+                                            <Text style={styles.photoIndicatorText}>
+                                                {item.TipoEvidenciaDescripcion || 'Evidencia'} ({index + 1} / {(orderDetails?.Fotos || []).length})
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+                            />
+                        )}
+
+                        {Platform.OS === 'web' && currentPhotoIndex < (orderDetails?.Fotos || []).length - 1 && (
+                            <TouchableOpacity 
+                                style={[styles.navButton, styles.navButtonRight]} 
+                                onPress={() => {
+                                    const newIndex = currentPhotoIndex + 1;
+                                    setCurrentPhotoIndex(newIndex);
+                                    flatListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+                                }}
+                            >
+                                <MaterialCommunityIcons name="chevron-right" size={50} color="rgba(255,255,255,0.7)" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </SafeAreaView>
             </Modal>
         </SafeAreaView>
     );
@@ -323,6 +428,59 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         marginTop: 50,
+    },
+    carouselHeader: {
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        padding: 20,
+        zIndex: 20,
+    },
+    carouselCloseButton: {
+        padding: 10,
+    },
+    carouselSlide: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    carouselContent: {
+        flex: 1,
+        zIndex: 5,
+    },
+    zoomWrapper: {
+        flex: 1,
+        width: SCREEN_WIDTH,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    photoIndicatorContainer: {
+        position: 'absolute',
+        bottom: 50,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+    },
+    photoIndicatorText: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    navButton: {
+        position: 'absolute',
+        zIndex: 30,
+        padding: 20,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        borderRadius: 40,
+    },
+    navButtonLeft: {
+        left: 20,
+    },
+    navButtonRight: {
+        right: 20,
     },
 
     // Detalle UI
@@ -437,38 +595,12 @@ const styles = StyleSheet.create({
     // Modal de imagen
     modalBackground: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.85)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    closeModalArea: {
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        right: 0,
-    },
-    imageModalContainer: {
-        width: '90%',
-        height: '80%',
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: '#000', // Black for focused viewing
     },
     fullImage: {
-        width: '100%',
+        width: SCREEN_WIDTH,
         height: '100%',
     },
-    closeModalButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        padding: 5,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 2,
-    }
 });
 
 export default OrderDetailScreen;
