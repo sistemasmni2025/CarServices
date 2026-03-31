@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Alert } from 'react-native';
+import { Image, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { showAlert } from '../../utils/uiAlerts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import SignatureModal from '../../components/SignatureModal';
 
@@ -239,13 +240,13 @@ const SummaryScreen = ({ wizardData, onUpdate, onFinish }) => {
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.finishButton, !(firmaPrestador && firmaCliente) && styles.disabledButton]}
-                    onPress={() => {
-                        if (!firmaPrestador || !firmaCliente) {
-                            Alert.alert('Firmas Requeridas', 'Por favor asegúrese de capturar la firma del Prestador y del Cliente antes de finalizar.');
-                            return;
-                        }
-                        onFinish({ ...wizardData, firmaPrestador, firmaCliente });
-                    }}
+                onPress={() => {
+                    if (!firmaPrestador || !firmaCliente) {
+                        showAlert('Firmas Requeridas', 'Por favor asegúrese de capturar la firma del Prestador y del Cliente antes de finalizar.');
+                        return;
+                    }
+                    onFinish({ ...wizardData, firmaPrestador, firmaCliente });
+                }}
                 >
                     <Text style={styles.finishButtonText}>Finalizar y Guardar Orden</Text>
                     <MaterialCommunityIcons name="check-decagram" size={24} color="#fff" />

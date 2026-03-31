@@ -28,12 +28,31 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
-localApi.interceptors.request.use(async (config) => {
-    const token = await AsyncStorage.getItem('user_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+// ----------------------------------------------------------------------
+// ENHANCED ERROR HANDLING INTERCEPTOR
+// ----------------------------------------------------------------------
+// This detects success: false in the body and extracts technical messages
+// from the server (message, Mensaje, detail, error) globally.
+const handleResponseSuccess = (response) => {
+    const data = response.data;
+    // Strictly validate: If success is false or if status is not 2xx, it's an error.
+    if (data && data.success === false) {
+        const errorMsg = data.message || data.Mensaje || data.error || data.detail || "Error en la operación del servidor.";
+        console.error("[API Global Error] Logical Failure:", errorMsg);
+        return Promise.reject(new Error(errorMsg));
     }
-    return config;
-});
+    return response;
+};
+
+const handleResponseError = (error) => {
+    // Extract technical message from Axios error
+    const data = error.response?.data;
+    const errorMsg = data?.message || data?.Mensaje || data?.detail || error.message;
+    console.error("[API Global Error] Network/Server Failure:", errorMsg);
+    return Promise.reject(new Error(errorMsg));
+};
+
+api.interceptors.response.use(handleResponseSuccess, handleResponseError);
+localApi.interceptors.response.use(handleResponseSuccess, handleResponseError);
 
 export default api;

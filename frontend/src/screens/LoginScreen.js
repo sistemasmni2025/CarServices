@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { showAlert, showError } from '../utils/uiAlerts';
 import { AuthContext } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
@@ -16,28 +17,14 @@ const LoginScreen = ({ navigation }) => {
          */
         const trimmedUsername = username.trim();
         if (!trimmedUsername || !password) {
-            Alert.alert('Error', 'Por favor ingrese usuario y contraseña');
+            showAlert('Campos Requeridos', 'Por favor ingrese usuario y contraseña');
             return;
         }
         setLoading(true);
         try {
             await login(trimmedUsername, password);
         } catch (error) {
-            // console.error(error);
-            let errorMessage = 'Usuario o contraseña incorrectos';
-
-            if (error.message && error.message.includes('Sucursal')) {
-                errorMessage = error.message;
-            } else if (error.response?.data?.detail) {
-                const detail = error.response.data.detail;
-                // FastAPI error details are often arrays (422)
-                // In this case, it's likely wrong credentials in the legacy system
-                errorMessage = typeof detail === 'string'
-                    ? detail
-                    : 'Usuario o contraseña incorrectos (Error de Esquema)';
-            }
-
-            Alert.alert('Login Fallido', errorMessage);
+            showError('Login Fallido', error);
         } finally {
             setLoading(false);
         }

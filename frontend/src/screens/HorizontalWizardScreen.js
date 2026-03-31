@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../context/AuthContext';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useIsFocused } from '@react-navigation/native';
+import { showAlert, showError, showConfirm } from '../utils/uiAlerts';
 
 const HorizontalWizardScreen = ({ navigation }) => {
     /**
@@ -119,54 +120,24 @@ const HorizontalWizardScreen = ({ navigation }) => {
                     const parsed = JSON.parse(savedState);
                     if (parsed && parsed.data && parsed.step) {
                         // ----------------------------------------------------------------------
-                        // RECUPERACIÓN DE BORRADORES (MANEJO INTERNO)
+                        // RECUPERACIÓN DE BORRADORES (GLOBAL UI)
                         // ----------------------------------------------------------------------
-
-                        // En Web, Alert.alert nativo no soporta botones personalizados, 
-                        // usamos window.confirm para preguntar si desea descartar.
-                        if (Platform.OS === 'web') {
-                            const discard = window.confirm("Se encontró una orden en curso (borrador). ¿Deseas DESCARTARLA y empezar una orden NUEVA?\n\n- [Aceptar] = Borrar Todo y Empezar Nueva\n- [Cancelar] = Continuar Borrador");
-                            if (discard) {
-                                AsyncStorage.removeItem(STORAGE_KEY).then(() => {
-                                    setWizardData(initialWizardData);
-                                    setCurrentStepId('ingreso');
-                                    setIsLoaded(true);
-                                });
-                            } else {
+                        showConfirm(
+                            "Orden en curso",
+                            "Se encontró una orden pendiente para esta sucursal. ¿Deseas continuarla o empezar una nueva?",
+                            () => {
+                                // Continuar
                                 setWizardData(parsed.data);
                                 setCurrentStepId(parsed.step);
                                 setIsLoaded(true);
-                                // console.log("[Wizard] State restored automatically (Web Mode)");
+                            },
+                            async () => {
+                                // Descartar
+                                await AsyncStorage.removeItem(STORAGE_KEY);
+                                setWizardData(initialWizardData);
+                                setCurrentStepId('ingreso');
+                                setIsLoaded(true);
                             }
-                            return;
-                        }
-
-                        // En Nativo (Android/iOS), preguntamos al usuario.
-                        Alert.alert(
-                            "Orden en curso",
-                            `Se encontró una orden pendiente para esta sucursal. ¿Deseas continuarla o empezar una nueva?`,
-                            [
-                                {
-                                    text: "Descartar",
-                                    style: "destructive",
-                                    onPress: async () => {
-                                        await AsyncStorage.removeItem(STORAGE_KEY);
-                                        setWizardData(initialWizardData);
-                                        setCurrentStepId('ingreso');
-                                        setIsLoaded(true);
-                                    }
-                                },
-                                {
-                                    text: "Continuar",
-                                    onPress: () => {
-                                        setWizardData(parsed.data);
-                                        setCurrentStepId(parsed.step);
-                                        setIsLoaded(true);
-                                        // console.log("Wizard state restored");
-                                    }
-                                }
-                            ],
-                            { cancelable: false }
                         );
                         return; // Wait for user choice
                     }
@@ -377,46 +348,23 @@ const HorizontalWizardScreen = ({ navigation }) => {
 
             if (result && (result.success !== false)) {
                 // Trazar el resultado dual (REST + SOAP)
-                const realFolio = result.soap_data && result.soap_data.Ordser ? result.soap_data.Ordser : (currentData.ingreso.noOrden || "N/A");
-                const finalOrdenId = result.rest_data?.OrdenID || result.OrdenID || megaPayload.Orden.OrdenID;
-
+                // const realFolio = result.soap_data && result.soap_data.Ordser ? result.soap_data.Ordser : (currentData.ingreso.noOrden || "N/A");
+                
                 // Clean up memoria local
                 setWizardData(initialWizardData);
                 setCurrentStepId('ingreso');
                 await AsyncStorage.removeItem(STORAGE_KEY);
 
-                if (Platform.OS === 'web') {
-                    // On web, window.alert is synchronous and blocks the thread.
-                    // The custom onPress buttons from React Native don't work reliably here.
-                    window.alert("Orden Finalizada");
+                showAlert("Orden Finalizada", "La orden ha sido registrada exitosamente.", () => {
                     navigation.navigate('OrderSearch');
-                } else {
-                    Alert.alert(
-                        "Orden Finalizada",
-                        "La orden ha sido registrada y guardada exitosamente en el sistema.",
-                        [
-                            {
-                                text: "OK",
-                                onPress: () => {
-                                    // Redireccionar a la pantalla de lista de ordenes (OrderSearch)
-                                    navigation.navigate('OrderSearch');
-                                }
-                            }
-                        ]
-                    );
-                }
+                });
 
             } else {
                 throw new Error(result.message || result.error || "Error desconocido al guardar la orden.");
             }
 
         } catch (error) {
-            // console.error("Error in unified finish flow:", error);
-            if (Platform.OS === 'web') {
-                window.alert(`No se pudo guardar la orden: ${error.message}`);
-            } else {
-                Alert.alert("Error de Guardado", `No se pudo guardar la orden: ${error.message}`);
-            }
+            showError("Error de Guardado", error);
         } finally {
             setUploading(false);
         }

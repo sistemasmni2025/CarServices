@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { showError } from '../../utils/uiAlerts';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -343,7 +344,7 @@ const IngresoScreen = ({ data, onUpdate, onNext }) => {
                                 // Fallback just in case
                             }
                         } catch (err) {
-                            // console.error("Failed to fetch asesores", err);
+                            showError("Error de Carga", "No se pudieron obtener los asesores. " + err.message);
                         } finally {
                             setLoadingAsesores(false);
                         }

@@ -76,57 +76,24 @@ const mapClientToBackend = (clientData, dns = "") => {
 
 // Backend Proxy for Client Sync (Create if not exists)
 export const syncClient = async (clientData, dns = "") => {
-    try {
-        const payload = mapClientToBackend(clientData, dns);
-        const response = await api.post('/clientes/crear', payload);
+    const payload = mapClientToBackend(clientData, dns);
+    const response = await api.post('/clientes/crear', payload);
 
-        // Validamos que el servidor haya respondido con éxito real
-        // Algunos backends devuelven 200 pero con un mensaje de error en el body
-        const isSuccess = response.data && (response.status === 200 || response.status === 201);
-        
-        if (!isSuccess || response.data?.success === false) {
-            const serverMsg = response.data?.message || response.data?.Mensaje || "Error al sincronizar con el servidor local.";
-            throw new Error(serverMsg);
-        }
-
-        return {
-            success: true,
-            clienteidgen: response.data?.ClienteIDGen || payload.ClienteIDGen,
-            localId: response.data?.ClienteID
-        };
-    } catch (error) {
-        // Mapeamos el error para que sea legible en el frontend
-        const data = error.response?.data;
-        const errorMsg = data?.message || data?.Mensaje || data?.detail || error.message;
-        throw new Error(errorMsg);
-    }
+    return {
+        success: true,
+        clienteidgen: response.data?.ClienteIDGen || payload.ClienteIDGen,
+        localId: response.data?.ClienteID
+    };
 };
 
 // Dedicated Update Endpoint
 export const updateClient = async (clientData, dns = "") => {
-    try {
-        const payload = mapClientToBackend(clientData, dns);
-        const response = await api.post('/clientes/actualizar', payload);
+    const payload = mapClientToBackend(clientData, dns);
+    const response = await api.post('/clientes/actualizar', payload);
 
-        const data = response.data;
-        // Validación estricta: Si success es false o si el status no es 200/201, es un error.
-        const isUpdateOk = response.status < 300 && data?.success !== false;
-
-        if (!isUpdateOk) {
-            // Buscamos el mensaje en orden de prioridad
-            const serverMsg = data?.message || data?.Mensaje || data?.error || data?.detail || "No se pudo actualizar el cliente.";
-            throw new Error(serverMsg);
-        }
-
-        return {
-            success: true,
-            clienteidgen: data?.ClienteIDGen || payload.ClienteIDGen,
-            localId: data?.ClienteID || clientData.localId
-        };
-    } catch (error) {
-        // Extraemos el mensaje real del servidor si existe
-        const data = error.response?.data;
-        const errorMsg = data?.message || data?.Mensaje || data?.detail || error.message;
-        throw new Error(errorMsg);
-    }
+    return {
+        success: true,
+        clienteidgen: response.data?.ClienteIDGen || payload.ClienteIDGen,
+        localId: response.data?.ClienteID || clientData.localId
+    };
 };

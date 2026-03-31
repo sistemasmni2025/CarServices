@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Keyboard } from 'react-native';
+import { showAlert, showError } from '../../utils/uiAlerts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createVehicle } from '../../services/vehicles';
 import { AuthContext } from '../../context/AuthContext';
@@ -24,7 +25,7 @@ const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
 
     const handleSaveVehicle = async () => {
         if (!formData.tag || !formData.brand || !formData.model) {
-            Alert.alert("Error", "Por favor ingresa al menos Placas, Marca y Modelo.");
+            showAlert("Error", "Por favor ingresa al menos Placas, Marca y Modelo.");
             return;
         }
 
@@ -69,11 +70,7 @@ const VehicleCreateModal = ({ visible, onClose, onVehicleCreated, client }) => {
             onClose();
 
         } catch (error) {
-            // console.error("Error creating vehicle:", error);
-            if (error.response) {
-                // console.error("Backend validation details:", error.response.data);
-            }
-            Alert.alert("Error", "No se pudo crear el vehículo. Verifica que las placas no estén duplicadas o que los datos sean correctos.");
+            showError("Error de Alta", error);
         } finally {
             setIsLoading(false);
         }

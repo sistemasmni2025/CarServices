@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, Modal, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Platform, Modal, FlatList, ActivityIndicator } from 'react-native';
+import { showAlert, showError } from '../../utils/uiAlerts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 // Picker removed
 import { registerVehicleSoap } from '../../services/vehicles';
@@ -130,8 +131,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
                 });
             }
         } catch (error) {
-            // console.error("Failed to load inspection checklist:", error);
-            // Fallback or alert?
+            showError("Error de Inspección", error);
         } finally {
             setLoadingInspection(false);
         }
@@ -193,7 +193,7 @@ const VehicleDetailsScreen = ({ data, client, onUpdate, onNext }) => {
     const handleNext = () => {
         // Basic Validation
         if (!formData.mileage || !formData.observaciones) {
-            Alert.alert("Campos Requeridos", "Por favor complete los campos marcados con *: Kilometraje (K.M.) y Observaciones.");
+            showAlert("Campos Requeridos", "Por favor complete los campos marcados con *: Kilometraje (K.M.) y Observaciones.");
             return;
         }
 

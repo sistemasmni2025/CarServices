@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Image, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, SafeAreaView } from 'react-native';
+import { showConfirm } from '../utils/uiAlerts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../context/AuthContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -44,13 +45,12 @@ const BranchSelectionScreen = () => {
     };
 
     const handleLogout = () => {
-        Alert.alert(
+        showConfirm(
             "Cerrar Sesión",
             "¿Estás seguro que deseas salir?",
-            [
-                { text: "Cancelar", style: "cancel" },
-                { text: "Salir", onPress: logout }
-            ]
+            logout,
+            () => { },
+            { confirmText: 'SALIR', cancelText: 'CANCELAR' }
         );
     };
 

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, Dimensions, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image, Dimensions } from 'react-native';
+import { showAlert, showError, showConfirm } from '../utils/uiAlerts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import { logout } from '../services/auth';
@@ -19,9 +20,13 @@ const DashboardScreen = ({ navigation }) => {
                     const clientName = order.cliente ? (order.cliente.razon_social || order.cliente.nombre) : 'Sin Cliente';
                     const vehicleInfo = order.vehiculo ? `${order.vehiculo.marca} ${order.vehiculo.modelo} (${order.vehiculo.placas})` : 'Sin Vehículo';
 
-                    if (Platform.OS === 'web') {
-                        const confirmMsg = `Orden #${order.no_orden} (${order.estatus})\n\nCliente: ${clientName}\nVehículo: ${vehicleInfo}\n\n¿Deseas retomarla o cancelarla?`;
-                        if (window.confirm(confirmMsg + "\n\n[OK] = Continuar Captura\n[Cancel] = Cancelar Orden")) {
+                    const confirmMsg = `Orden #${order.no_orden} (${order.estatus})\n\nCliente: ${clientName}\nVehículo: ${vehicleInfo}\n\n¿Deseas retomarla o cancelarla?`;
+
+                    showConfirm(
+                        "Orden Pendiente en Sistema",
+                        confirmMsg,
+                        async () => {
+                            // Continuar Captura
                             const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
 
                             // Map Backend Order to Wizard Data
@@ -71,97 +76,27 @@ const DashboardScreen = ({ navigation }) => {
 
                             await AsyncStorage.setItem(key, JSON.stringify({ data: mappedData, step: 'resumen', timestamp: Date.now() }));
                             navigation.navigate('Wizard');
-                        } else {
-                            if (window.confirm("¿Seguro que deseas CANCELAR esta orden permanentemente?")) {
-                                try {
-                                    await cancelOrder(order.id);
-                                    Alert.alert("Cancelado", "La orden ha sido cancelada exitosamente.");
-                                    const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
-                                    await AsyncStorage.removeItem(key);
-                                } catch (e) {
-                                    // console.log(e);
-                                    Alert.alert("Error", "No se pudo cancelar la orden en el servidor.");
-                                }
-                            }
-                        }
-                        return;
-                    }
-
-                    Alert.alert(
-                        "Orden Pendiente en Sistema",
-                        `Orden #${order.no_orden} (${order.estatus})\n\nCliente: ${clientName}\nVehículo: ${vehicleInfo}\n\n¿Deseas retomarla o cancelarla?`,
-                        [
-                            {
-                                text: "Cancelar Orden",
-                                onPress: async () => {
+                        },
+                        () => {
+                            // Cancelar Orden Option - Confirming cancellation
+                            showConfirm(
+                                "Confirmar Cancelación",
+                                "¿Seguro que deseas CANCELAR esta orden permanentemente?",
+                                async () => {
                                     try {
                                         await cancelOrder(order.id);
-                                        Alert.alert("Cancelado", "La orden ha sido cancelada exitosamente y el estado se ha limpiado.");
-                                        // Ensure local storage is also clean for this order if it matches
+                                        showAlert("Cancelado", "La orden ha sido cancelada exitosamente.");
                                         const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
                                         await AsyncStorage.removeItem(key);
                                     } catch (e) {
-                                        // console.log(e);
-                                        Alert.alert("Error", "No se pudo cancelar la orden en el servidor.");
+                                        showError("Error", e);
                                     }
                                 },
-                                style: "destructive"
-                            },
-                            {
-                                text: "Continuar Captura",
-                                onPress: async () => {
-                                    const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
-
-                                    // Map Backend Order to Wizard Data
-                                    const mappedData = {
-                                        ingreso: {
-                                            serie: order.serie,
-                                            noOrden: String(order.no_orden),
-                                            tipoOrden: order.tipo_orden,
-                                            fecha: order.fecha,
-                                            unidadNegocio: order.unidad_negocio,
-                                            asesor: String(order.asesor_id),
-                                            servicioForaneo: order.servicio_foraneo || 'Ninguno',
-                                            horaIngreso: order.fecha_ingreso,
-                                            fechaEntrega: order.fecha_entrega,
-                                            horaEntrega: ''
-                                        },
-                                        cliente: order.cliente ? {
-                                            id: order.cliente.id,
-                                            codigo: order.cliente.codigo,
-                                            nombre: order.cliente.nombre,
-                                            rfc: order.cliente.rfc,
-                                            razon_social: order.cliente.razon_social,
-                                            domicilio: order.cliente.domicilio,
-                                            ciudad: order.cliente.ciudad,
-                                            estado: order.cliente.estado,
-                                            cp: order.cliente.cp,
-                                            telefono: order.cliente.telefono,
-                                            email: order.cliente.email
-                                        } : null,
-                                        vehiculo: order.vehiculo ? {
-                                            style: null,
-                                            details: {
-                                                tag: order.vehiculo.placas,
-                                                brand: order.vehiculo.marca,
-                                                model: order.vehiculo.modelo,
-                                                year: String(order.vehiculo.anio),
-                                                color: order.vehiculo.color,
-                                                mileage: String(order.vehiculo.km),
-                                                chassis: order.vehiculo.no_serie
-                                            }
-                                        } : { style: null, details: {} },
-                                        fotos: {
-                                            frontal: null, lateralIzquierdo: null, lateralDerecho: null, trasero: null,
-                                            interior1: null, interior2: null, interior3: null, interior4: null, adicional: null
-                                        }
-                                    };
-
-                                    await AsyncStorage.setItem(key, JSON.stringify({ data: mappedData, step: 'resumen', timestamp: Date.now() }));
-                                    navigation.navigate('Wizard');
-                                }
-                            }
-                        ]
+                                () => { },
+                                { confirmText: 'SÍ, CANCELAR', cancelText: 'NO' }
+                            );
+                        },
+                        { confirmText: 'CONTINUAR CAPTURA', cancelText: 'CANCELAR ORDEN' }
                     );
                 }
             } catch (e) {
@@ -191,43 +126,25 @@ const DashboardScreen = ({ navigation }) => {
                     const vehicleInfo = vehiculo && vehiculo.details ? `${vehiculo.details.brand} ${vehiculo.details.model} (${vehiculo.details.tag})` : 'Vehículo Pendiente';
                     const orderDate = ingreso ? ingreso.fecha : 'Fecha Desconocida';
 
-                    if (Platform.OS === 'web') {
-                        // Lógica específica para Web
-                        const confirmMsg = `Se encontró una orden no finalizada:\n\nCliente: ${clientName}\nVehículo: ${vehicleInfo}\nFecha: ${orderDate}\n\n¿Deseas continuar con este registro?`;
-                        if (window.confirm(confirmMsg)) {
-                            navigation.navigate('Wizard');
-                        } else {
-                            if (window.confirm("¿Deseas descartar y limpiar el borrador local?")) {
-                                await AsyncStorage.removeItem(key);
-                                Alert.alert("Limpio", "El borrador local ha sido eliminado.");
-                                // Re-check backend immediately after clearing local
-                                // checkPendingBackend(selectedBranch.id, userData.id);
-                            }
-                        }
-                        return;
-                    }
-
-                    Alert.alert(
+                    showConfirm(
                         "Continuar Captura",
                         `Se encontró una orden no finalizada:\n\nCliente: ${clientName}\nVehículo: ${vehicleInfo}\nFecha: ${orderDate}\n\n¿Deseas continuar con este registro?`,
-                        [
-                            {
-                                text: "Descartar y Limpiar",
-                                onPress: async () => {
+                        () => {
+                            navigation.navigate('Wizard');
+                        },
+                        () => {
+                            showConfirm(
+                                "Confirmar Acción",
+                                "¿Deseas descartar y limpiar el borrador local?",
+                                async () => {
                                     await AsyncStorage.removeItem(key);
-                                    Alert.alert("Limpio", "El borrador local ha sido eliminado.");
-                                    // Revisa backend inmediatamente después de limpiar local
-                                    // checkPendingBackend(selectedBranch.id, userData.id);
+                                    showAlert("Limpio", "El borrador local ha sido eliminado.");
                                 },
-                                style: "destructive"
-                            },
-                            {
-                                text: "Continuar",
-                                onPress: () => {
-                                    navigation.navigate('Wizard');
-                                }
-                            }
-                        ]
+                                () => { },
+                                { confirmText: 'SÍ, DESCARTAR', cancelText: 'NO' }
+                            );
+                        },
+                        { confirmText: 'CONTINUAR', cancelText: 'DESCARTAR Y LIMPIAR' }
                     );
                     return;
                 }
@@ -248,20 +165,13 @@ const DashboardScreen = ({ navigation }) => {
     }, [navigation, userData]);
 
     const handleLogout = () => {
-        if (Platform.OS === 'web') {
-            if (window.confirm("¿Estás seguro que deseas salir?")) {
-                logout();
-            }
-        } else {
-            Alert.alert(
-                "Cerrar Sesión",
-                "¿Estás seguro que deseas salir?",
-                [
-                    { text: "Cancelar", style: "cancel" },
-                    { text: "Salir", onPress: logout }
-                ]
-            );
-        }
+        showConfirm(
+            "Cerrar Sesión",
+            "¿Estás seguro que deseas salir?",
+            logout,
+            () => { },
+            { confirmText: 'SALIR', cancelText: 'CANCELAR' }
+        );
     };
 
     const MenuCard = ({ title, subtitle, icon, color, onPress }) => (

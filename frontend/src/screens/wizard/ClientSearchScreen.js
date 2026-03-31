@@ -6,6 +6,7 @@ import { searchClients, createClient, syncClient, updateClient } from '../../ser
 import ClientCreateModal from './ClientCreateModal';
 import { AuthContext } from '../../context/AuthContext';
 import { useContext } from 'react';
+import { showAlert, showError } from '../../utils/uiAlerts';
 
 // CONSTANTS MOVED TO ClientCreateModal.js
 
@@ -28,15 +29,6 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
     const [filteredClients, setFilteredClients] = useState([]);
     const [editableClient, setEditableClient] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-
-    const showError = (title, message) => {
-        console.error(`[Wizard Error] ${title}:`, message);
-        if (Platform.OS === 'web') {
-            window.alert(`${title}\n\n${message}`);
-        } else {
-            Alert.alert(title, message);
-        }
-    };
 
 
     // Modal Form State - Updated keys to snake_case to match Backend Schema
@@ -75,7 +67,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
         } else {
             setFilteredClients([]);
             if (searchQuery.trim().length > 0) {
-                Alert.alert("Aviso", "Por favor ingrese al menos 3 caracteres para efectuar la búsqueda.");
+                showAlert("Aviso", "Por favor ingrese al menos 3 caracteres para efectuar la búsqueda.");
             }
         }
     };
@@ -364,9 +356,9 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                             setEditableClient(finalClientData);
                                             setSelectedClient(finalClientData);
                                             setIsEditing(false);
-                                            Alert.alert("Éxito", "Datos actualizados correctamente.");
+                                            showAlert("Éxito", "Datos actualizados correctamente.");
                                         } catch (err) {
-                                            showError("Error del Sistema", err.message || "No se pudo actualizar.");
+                                            showError("Error del Sistema", err);
                                         } finally {
                                             setIsLoading(false);
                                         }
@@ -406,7 +398,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                         onUpdate(updatedClient);
                                         onNext();
                                     } catch (err) {
-                                        showError("Error de Confirmación", err.message || "Ocurrió un error final.");
+                                        showError("Error de Confirmación", err);
                                     } finally {
                                         setIsLoading(false);
                                     }

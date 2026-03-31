@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, Dimensions, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ImageBackground, Dimensions, Modal, ActivityIndicator, Platform } from 'react-native';
+import { showAlert, showError } from '../../utils/uiAlerts';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
@@ -112,12 +113,12 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
         );
 
         if (photosToUpload.length === 0) {
-            alert('No hay fotos nuevas para subir.');
+            showAlert('Aviso', 'No hay fotos nuevas para subir.');
             return;
         }
 
         if (!orderId) {
-            alert('Error: No se encontró el ID de la Orden. Regrese al paso 1.');
+            showAlert('Error', 'No se encontró el ID de la Orden. Regrese al paso 1.');
             return;
         }
 
@@ -193,7 +194,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
             const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
             if (status !== 'granted') {
-                alert('Se necesita permiso para usar la cámara');
+                showAlert('Permisos', 'Se necesita permiso para usar la cámara');
                 setCapturingKey(null);
                 return;
             }
@@ -219,8 +220,7 @@ const PhotosScreen = ({ data, orderId, onUpdate, onNext }) => {
                 onUpdate(newPhotos);
             }
         } catch (error) {
-            // console.error("Error launching camera:", error);
-            alert('Error al abrir o procesar la cámara');
+            showError('Cámara', 'Error al abrir o procesar la cámara');
         } finally {
             setCapturingKey(null); // Unlock UI
         }

@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Alert, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, ActivityIndicator, Keyboard } from 'react-native';
+import { showAlert, showError } from '../../utils/uiAlerts';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createClient } from '../../services/clients';
@@ -94,7 +95,7 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
 
     const handleSaveClient = async () => {
         if (!formData.nombre || !formData.rfc) {
-            Alert.alert("Error", "Por favor ingresa al menos Nombre y RFC.");
+            showAlert("Error", "Por favor ingresa al menos Nombre y RFC.");
             return;
         }
 
@@ -156,11 +157,7 @@ const ClientCreateModal = ({ visible, onClose, onClientCreated }) => {
             onClose();
 
         } catch (error) {
-            // console.error("Error creating client:", error);
-            if (error.response) {
-                // console.error("Backend validation details:", error.response.data);
-            }
-            Alert.alert("Error", "No se pudo crear el cliente. Verifica que el RFC no esté duplicado o que los datos sean correctos.");
+            showError("Error de Alta", error);
         } finally {
             setIsLoading(false);
         }
