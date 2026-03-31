@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, FlatList, Platform, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Modal, FlatList, Platform, Keyboard, ActivityIndicator, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { searchClients, createClient, syncClient } from '../../services/clients';
-import { ActivityIndicator, Alert } from 'react-native';
+import { searchClients, createClient, syncClient, updateClient } from '../../services/clients';
 import ClientCreateModal from './ClientCreateModal';
 import { AuthContext } from '../../context/AuthContext';
 import { useContext } from 'react';
@@ -27,6 +26,18 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
         { id: '2', nombre: 'TRANSPORTES NIETO', rfc: 'TNI123456789', razon_social: 'MULTILLANTAS NIETO S.A.', regimen_fiscal: '601', domicilio: 'RIO LERMA 256', cp: '06700', ciudad: 'CDMX', estado: 'CDMX', telefono: '5559876543', email: 'contacto@nieto.com', placas: 'XYZ-789' },
     ]);
     const [filteredClients, setFilteredClients] = useState([]);
+    const [editableClient, setEditableClient] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const showError = (title, message) => {
+        console.error(`[Wizard Error] ${title}:`, message);
+        if (Platform.OS === 'web') {
+            window.alert(`${title}\n\n${message}`);
+        } else {
+            Alert.alert(title, message);
+        }
+    };
+
 
     // Modal Form State - Updated keys to snake_case to match Backend Schema
     // Modal State moved to ClientCreateModal
@@ -72,6 +83,8 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
     const handleSelectClient = (client) => {
         Keyboard.dismiss();
         setSelectedClient(client);
+        setEditableClient({ ...client }); // Initialize editable state
+        setIsEditing(false); // Default to read-only confirmation
         // Deferred to prevent "Blocked aria-hidden" React Native Web bug
         setTimeout(() => setIsConfirmModalVisible(true), 50);
     };
@@ -81,6 +94,8 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
         setClients([...clients, newClient]);
         setIsModalVisible(false); // Close create modal
         setSelectedClient(newClient); // Select new client
+        setEditableClient({ ...newClient }); // Initialize editable state
+        setIsEditing(false); // Default to read-only confirmation
         setTimeout(() => setIsConfirmModalVisible(true), 50); // Open confirm modal safely
     };
 
@@ -98,15 +113,28 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                     <View style={styles.selectedClientContainer}>
                         <View style={styles.selectedClientHeader}>
                             <Text style={styles.selectedClientTitle}>Cliente Seleccionado</Text>
-                            <TouchableOpacity
-                                style={styles.deselectButton}
-                                onPress={() => {
-                                    setSelectedClient(null);
-                                    onUpdate(null);
-                                }}
-                            >
-                                <MaterialCommunityIcons name="close" size={20} color="#666" />
-                            </TouchableOpacity>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                <TouchableOpacity
+                                    style={styles.editButtonSmall}
+                                    onPress={() => {
+                                        setEditableClient({ ...selectedClient });
+                                        setIsEditing(true);
+                                        setTimeout(() => setIsConfirmModalVisible(true), 50);
+                                    }}
+                                >
+                                    <MaterialCommunityIcons name="pencil" size={16} color="#007bff" />
+                                    <Text style={styles.editButtonTextSmall}>Editar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.deselectButton}
+                                    onPress={() => {
+                                        setSelectedClient(null);
+                                        onUpdate(null);
+                                    }}
+                                >
+                                    <MaterialCommunityIcons name="close" size={20} color="#666" />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                         <View style={styles.clientCardContent}>
                             <View style={styles.clientIconContainer}>
@@ -114,9 +142,13 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                             </View>
                             <View style={styles.clientDetails}>
                                 <Text style={styles.clientName}>{selectedClient.id ? `${selectedClient.id} - ` : ''}{selectedClient.nombre}</Text>
-                                <Text style={styles.clientInfo}>{selectedClient.rfc}</Text>
-                                <Text style={styles.clientInfo}>{selectedClient.telefono}</Text>
-                                <Text style={styles.clientInfo}>{selectedClient.email}</Text>
+                                <View style={styles.clientInfoRow}>
+                                    <Text style={styles.clientInfo}><MaterialCommunityIcons name="card-account-details-outline" size={14} /> {selectedClient.rfc}</Text>
+                                    <Text style={[styles.clientInfo, { marginLeft: 15 }]}><MaterialCommunityIcons name="phone" size={14} /> {selectedClient.telefono || 'N/A'}</Text>
+                                </View>
+                                <Text style={styles.clientInfo}><MaterialCommunityIcons name="email-outline" size={14} /> {selectedClient.email || 'N/A'}</Text>
+                                <Text style={styles.clientInfo}><MaterialCommunityIcons name="map-marker-outline" size={14} /> {selectedClient.domicilio}{selectedClient.domicilio2 ? ` (${selectedClient.domicilio2})` : ''}</Text>
+                                <Text style={styles.clientInfo}><MaterialCommunityIcons name="city" size={14} /> {selectedClient.ciudad}, {selectedClient.estado} {selectedClient.cp ? `CP: ${selectedClient.cp}` : ''}</Text>
                             </View>
                         </View>
                         <TouchableOpacity
@@ -209,95 +241,172 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Confirmar Cliente</Text>
+                            <View>
+                                <Text style={styles.modalTitle}>Confirmar Cliente</Text>
+                                <Text style={{ fontSize: 10, color: isEditing ? '#007bff' : '#666' }}>{isEditing ? 'Modo Edición Activado' : 'Solo Lectura'}</Text>
+                            </View>
                             <TouchableOpacity onPress={() => setIsConfirmModalVisible(false)}>
                                 <MaterialCommunityIcons name="close" size={24} color="#666" />
                             </TouchableOpacity>
                         </View>
 
-                        {selectedClient && (
+                        {editableClient && (
                             <ScrollView style={styles.formContainer}>
                                 <View style={styles.readOnlyContainer}>
-                                    <View style={styles.inputRow}>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={styles.label}>RFC</Text>
-                                            <Text style={styles.readOnlyText}>{selectedClient.rfc}</Text>
-                                        </View>
-                                        <View style={{ flex: 1, marginLeft: 10 }}>
-                                            <Text style={styles.label}>Teléfono</Text>
-                                            <Text style={styles.readOnlyText}>{selectedClient.telefono}</Text>
-                                        </View>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>RFC</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, styles.disabledInput]}
+                                            value={editableClient.rfc}
+                                            editable={false}
+                                        />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Teléfono</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.telefono}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, telefono: val })}
+                                            keyboardType="phone-pad"
+                                            editable={isEditing}
+                                        />
                                     </View>
 
                                     <View style={styles.inputGroup}>
                                         <Text style={styles.label}>Nombre / Razón Social</Text>
-                                        <Text style={styles.readOnlyText}>{selectedClient.id ? `${selectedClient.id} - ` : ''}{selectedClient.nombre}</Text>
-                                        {/* Fallback to razon_social if needed, though usually one or other implies name */}
+                                        <TextInput
+                                            style={[styles.modalInput, styles.disabledInput]}
+                                            value={editableClient.nombre}
+                                            editable={false}
+                                        />
                                     </View>
 
                                     <View style={styles.inputGroup}>
                                         <Text style={styles.label}>Domicilio</Text>
-                                        <Text style={styles.readOnlyText}>{selectedClient.domicilio}</Text>
-                                    </View>
-
-                                    <View style={styles.inputRow}>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={styles.label}>Ciudad</Text>
-                                            <Text style={styles.readOnlyText}>{selectedClient.ciudad}</Text>
-                                        </View>
-                                        <View style={{ flex: 1, marginLeft: 10 }}>
-                                            <Text style={styles.label}>Estado</Text>
-                                            <Text style={styles.readOnlyText}>{selectedClient.estado}</Text>
-                                        </View>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.domicilio}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, domicilio: val })}
+                                            editable={isEditing}
+                                        />
                                     </View>
 
                                     <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Domicilio 2 (Colonia/Referencia)</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.domicilio2}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, domicilio2: val })}
+                                            editable={isEditing}
+                                        />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>C.P.</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.cp}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, cp: val })}
+                                            keyboardType="numeric"
+                                            editable={isEditing}
+                                        />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Ciudad</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.ciudad}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, ciudad: val })}
+                                            editable={isEditing}
+                                        />
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>Estado</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.estado}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, estado: val })}
+                                            editable={isEditing}
+                                        />
+                                    </View>
+                                    <View style={styles.inputGroup}>
                                         <Text style={styles.label}>Correo Electrónico</Text>
-                                        <Text style={styles.readOnlyText}>{selectedClient.email || 'N/A'}</Text>
+                                        <TextInput
+                                            style={[styles.modalInput, !isEditing && styles.disabledInput]}
+                                            value={editableClient.email}
+                                            onChangeText={(val) => setEditableClient({ ...editableClient, email: val })}
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                            editable={isEditing}
+                                        />
                                     </View>
                                 </View>
                             </ScrollView>
                         )}
 
                         <View style={styles.modalFooter}>
+                            {isEditing ? (
+                                <TouchableOpacity
+                                    style={[styles.saveButton, { backgroundColor: '#007bff', marginRight: 'auto' }, isLoading && { opacity: 0.7 }]}
+                                    disabled={isLoading}
+                                    onPress={async () => {
+                                        setIsLoading(true);
+                                        try {
+                                            const syncResponse = await updateClient(editableClient, selectedBranch?.dns);
+                                            // Si llegamos aquí es porque no hubo error lanzado por el servicio
+                                            const finalClientData = { 
+                                                ...editableClient, 
+                                                localId: syncResponse.localId || editableClient.localId 
+                                            };
+                                            setEditableClient(finalClientData);
+                                            setSelectedClient(finalClientData);
+                                            setIsEditing(false);
+                                            Alert.alert("Éxito", "Datos actualizados correctamente.");
+                                        } catch (err) {
+                                            showError("Error del Sistema", err.message || "No se pudo actualizar.");
+                                        } finally {
+                                            setIsLoading(false);
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.saveButtonText}>Actualizar Datos</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity
+                                    onPress={() => setIsEditing(true)}
+                                    style={[styles.editBadge, { marginRight: 'auto' }]}
+                                >
+                                    <MaterialCommunityIcons name="pencil" size={20} color="#007bff" />
+                                    <Text style={styles.editBadgeText}>Editar Datos</Text>
+                                </TouchableOpacity>
+                            )}
+
                             <TouchableOpacity style={styles.cancelButton} onPress={() => setIsConfirmModalVisible(false)}>
-                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                <Text style={styles.cancelButtonText}>{isEditing ? 'Cancelar' : 'Cerrar'}</Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={[styles.saveButton, isLoading && { opacity: 0.7 }]}
                                 disabled={isLoading}
                                 onPress={async () => {
                                     setIsLoading(true);
                                     try {
-                                        // Sync with external API (172.16...), receive ID
-                                        const syncResponse = await syncClient(selectedClient);
-                                        // console.log("Client Sync Response:", syncResponse);
+                                        const syncResponse = await syncClient(editableClient, selectedBranch?.dns);
+                                        
+                                        const updatedClient = {
+                                            ...editableClient,
+                                            clienteidgen: syncResponse.clienteidgen || editableClient.clienteidgen,
+                                            localId: syncResponse.localId || editableClient.localId,
+                                        };
 
-                                        if (syncResponse && syncResponse.success) {
-                                            const updatedClient = {
-                                                ...selectedClient,
-                                                clienteidgen: syncResponse.clienteidgen || selectedClient.clienteidgen,
-                                                // Ensure we keep existing data if API returns minimal
-                                            };
-
-                                            setIsConfirmModalVisible(false);
-                                            onUpdate(updatedClient);
-                                            onNext();
-                                        } else {
-                                            Alert.alert("Error", "No se pudo sincronizar el cliente. Intente nuevamente.");
-                                        }
+                                        setIsConfirmModalVisible(false);
+                                        onUpdate(updatedClient);
+                                        onNext();
                                     } catch (err) {
-                                        // Show actual error for debugging
-                                        let errorMessage = err.message;
-                                        if (err.response) {
-                                            errorMessage = `Server Error: ${err.response.status}`;
-                                            if (err.response.data && err.response.data.detail) {
-                                                errorMessage += `\nDetalle: ${err.response.data.detail}`;
-                                            }
-                                        }
-
-                                        Alert.alert("Error de Conexión", `Falló la validación: ${errorMessage}`);
-                                        // console.log("Sync Error", err);
+                                        showError("Error de Confirmación", err.message || "Ocurrió un error final.");
                                     } finally {
                                         setIsLoading(false);
                                     }
@@ -570,6 +679,46 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         fontWeight: '500',
     },
+    disabledInput: {
+        backgroundColor: '#f0f0f0',
+        color: '#888',
+        borderColor: '#e0e0e0',
+    },
+    editBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f7ff',
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: '#007bff',
+        gap: 5,
+    },
+    editBadgeActive: {
+        backgroundColor: '#007bff',
+    },
+    editBadgeText: {
+        fontSize: 12,
+        color: '#007bff',
+        fontWeight: 'bold',
+    },
+    editButtonSmall: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 4,
+        backgroundColor: '#f0f7ff',
+        borderWidth: 1,
+        borderColor: '#007bff',
+    },
+    editButtonTextSmall: {
+        fontSize: 11,
+        color: '#007bff',
+        fontWeight: '600',
+    },
     // Selected Client Styles
     selectedClientContainer: {
         padding: 10,
@@ -611,6 +760,11 @@ const styles = StyleSheet.create({
     clientInfo: {
         fontSize: 12,
         color: '#666',
+        marginBottom: 2,
+    },
+    clientInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 2,
     },
     changeClientButton: {
