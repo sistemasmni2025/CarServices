@@ -347,19 +347,19 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                     onPress={async () => {
                                         setIsLoading(true);
                                         try {
-                                            const syncResponse = await updateClient(editableClient, selectedBranch?.dns);
+                                            const syncResponse = await syncClient(editableClient, selectedBranch?.dns);
                                             // Si llegamos aquí es porque no hubo error lanzado por el servicio
                                             const finalClientData = { 
                                                 ...editableClient, 
+                                                clienteidgen: syncResponse.clienteidgen || editableClient.clienteidgen,
                                                 localId: syncResponse.localId || editableClient.localId 
                                             };
                                             setEditableClient(finalClientData);
                                             setSelectedClient(finalClientData);
-                                            
-                                            // Proceed to next step automatically as requested
-                                            setIsConfirmModalVisible(false);
                                             onUpdate(finalClientData);
-                                            onNext();
+                                            
+                                            // Back to read-only view, wait for manual Confirmar Selección
+                                            setIsEditing(false);
                                         } catch (err) {
                                             showError("Error del Sistema", err);
                                         } finally {

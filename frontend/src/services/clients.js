@@ -50,8 +50,7 @@ const mapClientToBackend = (clientData, dns = "") => {
 
     const payload = {
         DNS: dns || "",
-        ClienteID: clientData.localId || 0, // MySQL Internal ID
-        ClienteId: clientData.localId || 0, // Fallback for case sensitivity
+        // ClienteID/ClienteId will be added below only if we have a local MySQL ID
         ClienteClave: String(rawIdGen !== 0 ? rawIdGen : idGeneradoLocal),
         ClienteNombre: clientData.nombre ? clientData.nombre.trim() : "SIN NOMBRE",
         ClienteRazon: clientData.razon_social ? clientData.razon_social.trim() : (clientData.nombre ? clientData.nombre.trim() : "SIN NOMBRE"),
@@ -69,6 +68,11 @@ const mapClientToBackend = (clientData, dns = "") => {
         ClienteEmail: clientData.email ? clientData.email.trim() : "",
         ClienteIDGen: cleanIdGen !== '0' ? cleanIdGen : "0"
     };
+
+    if (clientData.localId && clientData.localId !== 0 && clientData.localId !== '0') {
+        payload.ClienteID = clientData.localId;
+        payload.ClienteId = clientData.localId;
+    }
 
     console.log("[Client API Map] Payload generated:", JSON.stringify(payload, null, 2));
     return payload;
