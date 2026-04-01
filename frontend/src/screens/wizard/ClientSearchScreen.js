@@ -347,7 +347,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                     onPress={async () => {
                                         setIsLoading(true);
                                         try {
-                                            const syncResponse = await syncClient(editableClient, selectedBranch?.dns);
+                                            const syncResponse = await updateClient(editableClient, selectedBranch?.dns);
                                             // Si llegamos aquí es porque no hubo error lanzado por el servicio
                                             const finalClientData = { 
                                                 ...editableClient, 
@@ -389,7 +389,7 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                 onPress={async () => {
                                     setIsLoading(true);
                                     try {
-                                        const syncResponse = await syncClient(editableClient, selectedBranch?.dns);
+                                        const syncResponse = await updateClient(editableClient, selectedBranch?.dns);
                                         
                                         const updatedClient = {
                                             ...editableClient,
