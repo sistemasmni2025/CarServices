@@ -355,8 +355,11 @@ const ClientSearchScreen = ({ data, onUpdate, onNext }) => {
                                             };
                                             setEditableClient(finalClientData);
                                             setSelectedClient(finalClientData);
-                                            setIsEditing(false);
-                                            showAlert("Éxito", "Datos actualizados correctamente.");
+                                            
+                                            // Proceed to next step automatically as requested
+                                            setIsConfirmModalVisible(false);
+                                            onUpdate(finalClientData);
+                                            onNext();
                                         } catch (err) {
                                             showError("Error del Sistema", err);
                                         } finally {

@@ -85,7 +85,6 @@ const DashboardScreen = ({ navigation }) => {
                                 async () => {
                                     try {
                                         await cancelOrder(order.id);
-                                        showAlert("Cancelado", "La orden ha sido cancelada exitosamente.");
                                         const key = `WEBSESSION_ORDEN_${userData.id}_${selectedBranch.id}`;
                                         await AsyncStorage.removeItem(key);
                                     } catch (e) {
@@ -138,7 +137,6 @@ const DashboardScreen = ({ navigation }) => {
                                 "¿Deseas descartar y limpiar el borrador local?",
                                 async () => {
                                     await AsyncStorage.removeItem(key);
-                                    showAlert("Limpio", "El borrador local ha sido eliminado.");
                                 },
                                 () => { },
                                 { confirmText: 'SÍ, DESCARTAR', cancelText: 'NO' }

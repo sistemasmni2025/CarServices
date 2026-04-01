@@ -354,10 +354,7 @@ const HorizontalWizardScreen = ({ navigation }) => {
                 setWizardData(initialWizardData);
                 setCurrentStepId('ingreso');
                 await AsyncStorage.removeItem(STORAGE_KEY);
-
-                showAlert("Orden Finalizada", "La orden ha sido registrada exitosamente.", () => {
-                    navigation.navigate('OrderSearch');
-                });
+                navigation.navigate('OrderSearch');
 
             } else {
                 throw new Error(result.message || result.error || "Error desconocido al guardar la orden.");
